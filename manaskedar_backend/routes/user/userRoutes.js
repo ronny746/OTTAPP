@@ -30,11 +30,10 @@ router.post('/interactions/comment/:commentId/like', interactionCtrl.toggleComme
 
 // User Image Upload (dp)
 const multer = require('multer');
-const os = require('os');
 const upload = multer({ 
     storage: multer.diskStorage({
-        destination: os.tmpdir(),
-        filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+        destination: (req, file, cb) => cb(null, 'uploads/'),
+        filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
     }),
     limits: { fileSize: 10 * 1024 * 1024 } // 10 MB for Profile Pic
 });

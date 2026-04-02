@@ -10,27 +10,42 @@ import 'shorts_screen.dart';
 import 'audiobooks_screen.dart';
 import 'my_account_screen.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    Get.put(GlobalAudioController());
-    final controller = Get.put(MainScreenController());
+  State<MainScreen> createState() => _MainScreenState();
+}
 
+class _MainScreenState extends State<MainScreen> {
+  late final List<Widget> _tabs;
+  final controller = Get.put(MainScreenController());
+
+  @override
+  void initState() {
+    super.initState();
+    Get.put(GlobalAudioController());
+    _tabs = [
+      _TabNavigator(index: 0, child: HomeScreen()),
+      _TabNavigator(index: 1, child: VideosScreen()),
+      _TabNavigator(index: 2, child: const ShortsScreen()),
+      _TabNavigator(index: 3, child: const AudiobooksScreen()),
+      _TabNavigator(index: 4, child: const MyAccountScreen()),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
         if (didPop) return;
-        
-        // 1. First try to pop nested routes
         final navigatorState = Get.nestedKey(controller.selectedIndex.value)?.currentState;
         if (navigatorState != null && navigatorState.canPop()) {
           navigatorState.pop();
           return;
         }
 
-        // 2. If no nested routes, show Exit Confirmation Dialog
         final shouldExit = await Get.dialog<bool>(
           AlertDialog(
             backgroundColor: Colors.grey[900],
@@ -43,10 +58,7 @@ class MainScreen extends StatelessWidget {
             ],
           ),
         );
-
-        if (shouldExit == true) {
-          SystemNavigator.pop();
-        }
+        if (shouldExit == true) SystemNavigator.pop();
       },
       child: Scaffold(
         extendBodyBehindAppBar: true,
@@ -58,15 +70,9 @@ class MainScreen extends StatelessWidget {
         body: Stack(
           children: [
             Obx(() => IndexedStack(
-              index: controller.selectedIndex.value,
-              children: [
-                _TabNavigator(index: 0, child:  HomeScreen()),
-                _TabNavigator(index: 1, child:  VideosScreen()),
-                _TabNavigator(index: 2, child: const ShortsScreen()),
-                _TabNavigator(index: 3, child: const AudiobooksScreen()),
-                _TabNavigator(index: 4, child: const MyAccountScreen()),
-              ],
-            )),
+                index: controller.selectedIndex.value,
+                children: _tabs,
+              )),
             const Positioned(
               left: 0,
               right: 0,
@@ -78,9 +84,7 @@ class MainScreen extends StatelessWidget {
         bottomNavigationBar: Obx(
           () => BottomNavigationBar(
             currentIndex: controller.selectedIndex.value,
-            onTap: (index) {
-              controller.onItemTapped(index);
-            },
+            onTap: controller.onItemTapped,
             items: [
               BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home), label: "home".tr),
               BottomNavigationBarItem(icon: const Icon(Icons.video_collection_outlined), activeIcon: const Icon(Icons.video_collection), label: "videos".tr),
