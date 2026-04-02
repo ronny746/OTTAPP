@@ -118,49 +118,71 @@ const AddMedia = () => {
                     </div>
                 </div>
 
-                {/* 2. MEDIA SELECTION */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="frosted-card p-8 group cursor-pointer" onClick={() => setIsPickerOpen({ ...isPickerOpen, image: true })}>
-                        <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <ImageIcon size={14} /> Thumbnail Image
-                        </h4>
-                        <div className={`h-48 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all overflow-hidden ${formData.imageUrl ? 'border-[#4f46e5]/40 bg-[#4f46e5]/5' : 'border-white/5 bg-white/[0.02] hover:border-[#4f46e5]/20'}`}>
+                {/* 2. MEDIA SELECTION - COMPACT & PREMIUM */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-5">
+                    {/* Thumbnail Image Selection */}
+                    <div 
+                        onClick={() => setIsPickerOpen({ ...isPickerOpen, image: true })}
+                        className={`relative group cursor-pointer transition-all duration-300 rounded-[2rem] border overflow-hidden p-6 ${formData.imageUrl ? 'bg-indigo-500/10 border-indigo-500/30 ring-1 ring-indigo-500/20' : 'bg-white/[0.02] border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.04]'}`}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.imageUrl ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-white/5 text-white/40 group-hover:text-white'}`}>
+                                    <ImageIcon size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Select Thumbnail</h4>
+                                    <p className="text-[8px] text-indigo-500 font-bold uppercase tracking-widest mt-0.5">High Res Preferred</p>
+                                </div>
+                            </div>
+                            {formData.imageUrl && <CheckCircle2 size={16} className="text-indigo-500" />}
+                        </div>
+                        
+                        <div className={`h-24 rounded-2xl border border-white/5 bg-black/40 overflow-hidden flex flex-col items-center justify-center transition-all ${!formData.imageUrl && 'group-hover:border-indigo-500/20 group-hover:bg-indigo-500/5'}`}>
                             {formData.imageUrl ? (
-                                <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
+                                <img src={formData.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
                             ) : (
-                                <div className="flex flex-col items-center gap-3 text-center">
-                                    <ImageIcon size={24} className="text-white/10" />
-                                    <span className="text-white/20 text-[9px] uppercase font-black tracking-widest">Select From Library</span>
+                                <div className="flex flex-col items-center gap-2">
+                                    <Database size={20} className="text-white/10 group-hover:text-indigo-500/40 transition-colors" />
+                                    <span className="text-white/20 text-[7px] uppercase font-black tracking-widest group-hover:text-white/40">Enter Library</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="frosted-card p-8 group cursor-pointer" onClick={() => formData.type !== 'show' && setIsPickerOpen({ ...isPickerOpen, video: true })}>
-                        <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <Play size={14} /> Main Video File
-                        </h4>
-                        {formData.type === 'show' ? (
-                            <div className="h-48 rounded-2xl border-2 border-dashed border-white/5 bg-white/5 flex flex-col items-center justify-center p-6 text-center">
-                                <Layers size={32} className="text-[#4f46e5] mb-3" />
-                                <span className="text-white/60 font-black text-[10px] uppercase tracking-widest">Series Mode Enabled</span>
-                                <p className="text-[8px] text-white/20 mt-1 uppercase font-black">Add episodes below</p>
+                    {/* Video Selection Card */}
+                    <div 
+                        onClick={() => formData.type !== 'show' && setIsPickerOpen({ ...isPickerOpen, video: true })}
+                        className={`relative group cursor-pointer transition-all duration-300 rounded-[2rem] border overflow-hidden p-6 ${formData.type === 'show' ? 'opacity-40 cursor-not-allowed bg-black/20 border-white/5' : (formData.videoUrl ? 'bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-white/[0.02] border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.04]')}`}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.type === 'show' ? 'bg-white/5 text-white/20' : (formData.videoUrl ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white/5 text-white/40 group-hover:text-white')}`}>
+                                    <Film size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{formData.type === 'show' ? 'Series Mode' : 'Select Main Video'}</h4>
+                                    <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-widest mt-0.5">{formData.type === 'show' ? 'Add Episodes Below' : '4K Optimized Output'}</p>
+                                </div>
                             </div>
-                        ) : (
-                            <div className={`h-48 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${formData.videoUrl ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-white/5 bg-white/[0.02] hover:border-[#4f46e5]/20'}`}>
-                                {formData.videoUrl ? (
-                                    <div className="flex flex-col items-center gap-2 text-emerald-500">
-                                        <CheckCircle2 size={32} />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Video Selected</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-3 text-center">
-                                        <Play size={24} className="text-white/10" />
-                                        <span className="text-white/20 text-[9px] uppercase font-black tracking-widest">Select From Library</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                            {formData.videoUrl && <CheckCircle2 size={16} className="text-emerald-500" />}
+                        </div>
+                        
+                        <div className={`h-24 rounded-2xl border border-white/5 bg-black/40 overflow-hidden flex flex-col items-center justify-center transition-all ${!formData.videoUrl && 'group-hover:border-emerald-500/20 group-hover:bg-emerald-500/5'}`}>
+                            {formData.type === 'show' ? (
+                                <Layers size={24} className="text-white/10" />
+                            ) : formData.videoUrl ? (
+                                <div className="flex flex-col items-center gap-2 text-emerald-500/60">
+                                    <Play size={20} className="animate-pulse" />
+                                    <span className="text-white/40 text-[7px] uppercase font-black tracking-widest">{formData.videoUrl.split('/').pop()}</span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                    <ArrowRightCircle size={20} className="text-white/10 group-hover:text-emerald-500/40 transition-colors" />
+                                    <span className="text-white/20 text-[7px] uppercase font-black tracking-widest group-hover:text-white/40 text-center">Reference File</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

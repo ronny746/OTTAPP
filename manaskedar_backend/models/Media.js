@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const mediaSchema = new mongoose.Schema({
     title: { type: String, required: true },
     imageUrl: { type: String, required: true },
-    videoUrl: { type: String, required: true },
+    videoUrl: { type: String },
     type: { type: String, enum: ['video', 'audio', 'short', 'movie', 'shorts', 'show'], required: true },
     description: { type: String, default: 'A mysterious story unfolding in the heart of the city...' },
     rating: { type: String, default: '4.5' },

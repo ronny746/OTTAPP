@@ -39,6 +39,10 @@ class InteractionController extends GetxController {
       final String shareText =
           "Check out '${item.title}' on Manaskedar OTT!\n\nDownload the app to watch it now!";
       await Share.share(shareText);
+
+      // Only increment on server once per session/user locally
+      if (item.isSharedLocally) return;
+
       final headers = await ApiConfig.getHeaders();
       final response = await http.post(
         Uri.parse("${ApiConfig.user}/interactions/share/${item.id}"),

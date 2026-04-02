@@ -323,9 +323,6 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                         await interactionCtrl.incrementShare(widget.item);
                         setState(() {});
                       },
-                      color: widget.item.isSharedLocally
-                          ? Colors.red
-                          : Colors.white,
                     ),
                     _shortsAction(Icons.more_horiz, "", () {}),
                   ],
@@ -350,14 +347,17 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
         padding: const EdgeInsets.only(bottom: 25),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 36),
+            Icon(icon, color: color, size: 30),
             if (label != "")
               Text(
                 label,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(blurRadius: 10.0, color: Colors.black54, offset: Offset(2.0, 2.0)),
+                  ],
                 ),
               ),
           ],
