@@ -202,40 +202,66 @@ const AddMedia = () => {
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {formData.episodes.map((ep, idx) => (
-                                <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-center">
-                                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center font-black text-[#4f46e5] text-xl">
-                                        {idx + 1}
-                                    </div>
-                                    
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                                        <input
-                                            type="text"
-                                            placeholder="Episode Title"
-                                            className="input-field py-2.5 text-xs bg-black/20"
-                                            value={ep.title}
-                                            onChange={(e) => updateEpisode(idx, 'title', e.target.value)}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Duration (e.g. 45m)"
-                                            className="input-field py-2.5 text-xs bg-black/20"
-                                            value={ep.duration}
-                                            onChange={(e) => updateEpisode(idx, 'duration', e.target.value)}
-                                        />
+                                <div key={idx} className="relative bg-white/[0.03] border border-white/10 rounded-[2rem] p-8 group hover:border-[#4f46e5]/40 transition-all flex flex-col gap-6 overflow-hidden">
+                                     {/* Episode Index Background Glow */}
+                                     <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#4f46e5]/10 blur-[50px] group-hover:bg-[#4f46e5]/20 transition-all"></div>
+                                     
+                                     <div className="flex items-center justify-between relative">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-[#4f46e5] text-white flex items-center justify-center rounded-2xl font-black text-xl shadow-lg shadow-[#4f46e5]/20">
+                                                {idx + 1}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Episode Protocol</h4>
+                                                <p className="text-[8px] text-[#4f46e5] font-black uppercase tracking-[0.2em] mt-0.5">Ready for Sync</p>
+                                            </div>
+                                        </div>
                                         <button 
-                                            type="button"
-                                            onClick={() => setIsPickerOpen({ ...isPickerOpen, episode: idx })}
-                                            className={`py-2.5 rounded-xl border border-dashed text-[9px] font-black uppercase transition-all ${ep.videoUrl ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-500' : 'border-white/10 text-white/30 hover:border-white/20'}`}
+                                            type="button" 
+                                            onClick={() => removeEpisode(idx)} 
+                                            className="p-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl transition-all border border-rose-500/20"
                                         >
-                                            {ep.videoUrl ? 'Video Linked' : 'Select Video'}
+                                            <Trash2 size={18} />
                                         </button>
-                                    </div>
+                                     </div>
 
-                                    <button type="button" onClick={() => removeEpisode(idx)} className="p-3 text-rose-500/50 hover:text-rose-500 transition-all">
-                                        <Trash2 size={20} />
-                                    </button>
+                                     <div className="space-y-4 relative">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Episode Title</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. The Beginning..."
+                                                className="input-field py-3 text-xs bg-black/40 font-bold"
+                                                value={ep.title}
+                                                onChange={(e) => updateEpisode(idx, 'title', e.target.value)}
+                                            />
+                                        </div>
+                                        
+                                        <div className="flex gap-4">
+                                            <div className="flex-1 space-y-1.5">
+                                                <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Runtime</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="45m"
+                                                    className="input-field py-3 text-xs bg-black/40 font-bold"
+                                                    value={ep.duration}
+                                                    onChange={(e) => updateEpisode(idx, 'duration', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="flex-1 space-y-1.5">
+                                                <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] ml-1">Video Source</label>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setIsPickerOpen({ ...isPickerOpen, episode: idx })}
+                                                    className={`w-full py-3 rounded-xl border border-dashed text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 ${ep.videoUrl ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-white/10 text-white/40 hover:border-white/30 hover:bg-white/5'}`}
+                                                >
+                                                    {ep.videoUrl ? <><CheckCircle2 size={14}/> Linked</> : <><Play size={14}/> Select Video</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                     </div>
                                 </div>
                             ))}
                         </div>

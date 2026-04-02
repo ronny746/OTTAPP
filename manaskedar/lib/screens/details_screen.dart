@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manaskedar/models/media_item.dart';
+import 'package:manaskedar/utils/app_theme.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_video_player_plus/cached_video_player_plus.dart';
 import 'package:get/get.dart';
@@ -109,108 +110,250 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.item.title,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    widget.item.title.toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      Text(widget.item.year, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 5),
+                      Text(widget.item.rating, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(width: 15),
+                      Text(widget.item.year, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 15)),
                       const SizedBox(width: 15),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.white24),
+                          borderRadius: BorderRadius.circular(3),
                         ),
-                        child: const Text("HD", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                        child: Text(widget.item.type.toUpperCase(), style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w900)),
                       ),
                       const SizedBox(width: 15),
-                      Text(widget.item.duration, style: const TextStyle(color: Colors.white60, fontSize: 16)),
+                      Text(widget.item.duration, style: const TextStyle(color: Colors.white60, fontSize: 15)),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.item.description,
+                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 25),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (_initialized) _trailerPlayer.controller.pause();
+                    GestureDetector(
+                      onTap: () {
+                         if (_initialized) _trailerPlayer.controller.pause();
+                          
+                          late MediaItem playMedia;
+                          if (widget.item.type == 'show' && widget.item.episodes.isNotEmpty) {
+                             final ep = widget.item.episodes.first;
+                             playMedia = MediaItem(
+                               id: "${widget.item.id}_0",
+                               title: "${widget.item.title} - ${ep.title}",
+                               imageUrl: ep.imageUrl ?? widget.item.imageUrl,
+                               videoUrl: ep.videoUrl,
+                               type: 'video', 
+                               description: ep.description ?? widget.item.description,
+                             );
+                          } else {
+                             playMedia = widget.item;
+                          }
+
                           Navigator.of(context, rootNavigator: true).push(
-                            MaterialPageRoute(builder: (_) => VideoPlayerScreen(item: widget.item)),
+                            MaterialPageRoute(builder: (_) => VideoPlayerScreen(item: playMedia)),
                           );
-                        },
-                        icon: const Icon(Icons.play_arrow, color: Colors.black, size: 28),
-                        label: const Text("PLAY", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1.2)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.white, Color(0xFFE0E0E0)],
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, color: Colors.black, size: 32),
+                            SizedBox(width: 8),
+                            Text(
+                              "PLAY", 
+                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.5),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          final downloadController = Get.put(DownloadController());
-                          downloadController.startDownload(widget.item);
-                        },
-                        icon: const Icon(Icons.download, color: Colors.white, size: 24),
-                        label: const Text("DOWNLOAD", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        GetBuilder<InteractionController>(
+                          init: Get.find<InteractionController>(),
+                          builder: (ctrl) => _actionButton(
+                            widget.item.isFavorite ? Icons.check_circle : Icons.add_circle_outline,
+                            "My List",
+                            () => ctrl.toggleFavorite(widget.item),
+                            color: widget.item.isFavorite ? Colors.red : Colors.white,
+                          ),
+                        ),
+                        _actionButton(Icons.share_outlined, "Share", () {
+                           Get.find<InteractionController>().incrementShare(widget.item);
+                        }),
+                        _actionButton(Icons.thumb_up_alt_outlined, "Rate", () {}),
+                      ],
+                    ),
+                  const SizedBox(height: 35),
+                  
+                  // --- CAST SECTION (PREMIUM) ---
+                  const Text("Top Cast", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    height: 110,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 5,
+                      itemBuilder: (context, i) => Container(
+                        width: 85,
+                        margin: const EdgeInsets.only(right: 15),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 35,
+                              backgroundColor: Colors.white10,
+                              backgroundImage: const NetworkImage("https://www.w3schools.com/howto/img_avatar.png"),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text("Actor Name", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                          ],
                         ),
                       ),
                     ),
-                  const SizedBox(height: 30),
-                
+                  ),
+                  const SizedBox(height: 35),
+
                 // --- EPISODES SECTION ---
                 if (widget.item.episodes.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Episodes",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "EPISODES", 
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2.0),
+                      ),
+                      Text(
+                        "${widget.item.episodes.length} EPISODES",
+                        style: const TextStyle(color: Colors.white30, fontSize: 11, fontWeight: FontWeight.w900),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.item.episodes.length,
                     itemBuilder: (context, index) {
                       final ep = widget.item.episodes[index];
-                      return ListTile(
+                      return GestureDetector(
                         onTap: () {
-                          // Create a dummy MediaItem for the episode to play it in the same player
+                          if (_initialized) _trailerPlayer.controller.pause();
                           final epMedia = MediaItem(
-                            id: "${widget.item.id}_${index}", 
+                            id: "${widget.item.id}_$index", 
                             title: ep.title,
                             imageUrl: ep.imageUrl ?? widget.item.imageUrl,
                             videoUrl: ep.videoUrl,
                             type: 'video',
                             description: ep.description ?? widget.item.description,
                           );
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => VideoPlayerScreen(item: epMedia)));
+                          Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(builder: (_) => VideoPlayerScreen(item: epMedia)),
+                          );
                         },
-                        leading: Container(
-                          width: 100,
-                          height: 56,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: NetworkImage(ep.imageUrl ?? widget.item.imageUrl),
-                              fit: BoxFit.cover,
-                            ),
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: Colors.white.withOpacity(0.05)),
                           ),
-                          child: const Center(child: Icon(Icons.play_arrow, color: Colors.white)),
+                          child: Row(
+                            children: [
+                              // 🎥 EPISODE PREVIEW (NETFLIX STYLE)
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: CachedNetworkImage(
+                                      imageUrl: ep.imageUrl ?? widget.item.imageUrl,
+                                      width: 140,
+                                      height: 90,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 140,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black26,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(Icons.play_circle_filled_rounded, color: Colors.white.withOpacity(0.8), size: 40),
+                                  ),
+                                  Positioned(
+                                    bottom: 5,
+                                    left: 8,
+                                    child: Text(
+                                      "EP ${index + 1}",
+                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ep.title,
+                                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: -0.2),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      ep.duration,
+                                      style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.7), fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      ep.description ?? widget.item.description,
+                                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, height: 1.3),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        title: Text(ep.title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                        subtitle: Text(ep.duration, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                        trailing: const Icon(Icons.download_outlined, color: Colors.white38),
                       );
                     },
                   ),
@@ -270,6 +413,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 }
+
+Widget _actionButton(IconData icon, String label, VoidCallback onTap, {Color color = Colors.white}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 5),
+          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
 
 class _DetailAction extends StatelessWidget {
   final IconData icon;

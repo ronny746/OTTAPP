@@ -28,6 +28,7 @@ class MediaItem {
   final String rating;
   final String year;
   final String duration;
+  final String? category;
   
   // Episode Data
   final List<Episode> episodes;
@@ -48,6 +49,7 @@ class MediaItem {
     required this.imageUrl,
     required this.videoUrl,
     required this.type,
+    this.category,
     this.description = "A mysterious story unfolding in the heart of the city...",
     this.rating = "4.5",
     this.year = "2024",
@@ -78,6 +80,9 @@ class MediaItem {
       imageUrl: json['imageUrl'] ?? '',
       videoUrl: json['videoUrl'] ?? '',
       type: json['type'] ?? 'video',
+      category: json['category'] != null ? 
+                 (json['category'] is Map ? json['category']['name'] : json['category'].toString()) 
+                 : null,
       description: json['description'] ?? '',
       rating: json['rating'] ?? '4.5',
       year: json['year'] ?? '2024',

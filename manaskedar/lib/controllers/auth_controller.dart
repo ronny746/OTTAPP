@@ -53,7 +53,7 @@ class AuthController extends GetxController {
       final headers = await ApiConfig.getHeaders();
       final response = await http.get(Uri.parse("${ApiConfig.auth}/profile"), headers: headers);
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         userName.value = data['name'] ?? 'OTT User';
         userPhone.value = data['phone'] ?? '';
         userCity.value = data['city'] ?? '';
@@ -73,11 +73,11 @@ class AuthController extends GetxController {
       final response = await http.put(
         Uri.parse("${ApiConfig.auth}/profile"),
         headers: headers,
-        body: json.encode({'name': name, 'city': city, 'imageUrl': imageUrl})
+        body: ApiConfig.encode({'name': name, 'city': city, 'imageUrl': imageUrl})
       );
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         userName.value = data['name'] ?? 'OTT User';
         userCity.value = data['city'] ?? '';
         userImageUrl.value = data['imageUrl'] ?? '';
@@ -101,7 +101,7 @@ class AuthController extends GetxController {
       final response = await http.post(
         Uri.parse("${ApiConfig.auth}/send-otp"),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'phone': phone}),
+        body: ApiConfig.encode({'phone': phone}),
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -124,11 +124,11 @@ class AuthController extends GetxController {
         Uri.parse("${ApiConfig.auth}/verify-otp"),
         headers: {'Content-Type': 'application/json'},
         // Added deviceId to satisfy backend multi-session tracking
-        body: json.encode({'phone': phoneNumber.value, 'otp': code, 'deviceId': 'flutter_mobile_app'}),
+        body: ApiConfig.encode({'phone': phoneNumber.value, 'otp': code, 'deviceId': 'flutter_mobile_app'}),
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         final token = data['token'];
         
         final prefs = await SharedPreferences.getInstance();

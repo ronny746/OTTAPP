@@ -15,7 +15,7 @@ class InteractionController extends GetxController {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         item.likesCount = data['likesCount'];
         if (data['likes'] != null) {
           item.likesList = (data['likes'] as List).map((e) => e.toString()).toList();
@@ -49,7 +49,7 @@ class InteractionController extends GetxController {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         item.sharesCount = data['shares'];
         item.isSharedLocally = true;
         update();
@@ -72,7 +72,7 @@ class InteractionController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
+        final List data = ApiConfig.decode(response.body);
         List<CommentModel> flatComments = data
             .map((c) => CommentModel.fromJson(c))
             .toList();
@@ -109,13 +109,17 @@ class InteractionController extends GetxController {
     try {
       final headers = await ApiConfig.getHeaders();
       final response = await http.post(
-        Uri.parse("${ApiConfig.user}/interactions/comment/${item.id}"),
+        Uri.parse("${ApiConfig.user}/interactions/comment"),
         headers: headers,
-        body: json.encode({'text': text, 'parentCommentId': parentId}),
+        body: ApiConfig.encode({
+          'mediaId': item.id,
+          'text': text,
+          'parentId': parentId,
+        }),
       );
 
       if (response.statusCode == 201) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         final newComment = CommentModel.fromJson(data);
 
         if (parentId != null) {
@@ -148,7 +152,7 @@ class InteractionController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
 
         // Find comment and update likesCount
         void updateLikes(List<CommentModel> list) {
@@ -246,7 +250,7 @@ class InteractionController extends GetxController {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = ApiConfig.decode(response.body);
         item.isFavorite = data['isFavorite'];
         
         // Update local list if we have it

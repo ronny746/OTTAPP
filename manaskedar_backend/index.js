@@ -19,7 +19,38 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 🛡️ ADVANCED DATA OBFUSCATION (Ultimate Privacy Layer)
+const SALT = "MK_SEC_2024_"; // Secure Salt Prefix
+
+app.use((req, res, next) => {
+    // 1. DECODE INCOMING REQUESTS
+    if ((req.method === 'POST' || req.method === 'PUT') && req.body && req.body._q) {
+        try {
+            const reversed = req.body._q.split('').reverse().join('');
+            const decoded = Buffer.from(reversed, 'base64').toString('utf8');
+            if (decoded.startsWith(SALT)) {
+                req.body = JSON.parse(decoded.substring(SALT.length));
+            }
+        } catch (e) {
+            console.error("Payload decoding failed:", e.message);
+        }
+    }
+
+    // 2. ENCODE OUTGOING RESPONSES
+    const originalJson = res.json;
+    res.json = function(data) {
+        if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
+            const saltedJson = SALT + JSON.stringify(data);
+            const base64 = Buffer.from(saltedJson).toString('base64');
+            const reversed = base64.split('').reverse().join('');
+            return originalJson.call(this, { _s: reversed });
+        }
+        return originalJson.call(this, data);
+    };
+    next();
+});
 
 // Admin Routes
 app.use('/api/admin', adminRoutes);

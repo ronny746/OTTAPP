@@ -111,31 +111,56 @@ class HomeScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-                            interactionCtrl.fetchWatchHistory();
+                        // 🔥 PREMIUM PLAY BUTTON (BANNER)
+                        GestureDetector(
+                          onTap: () async {
+                             await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
+                             interactionCtrl.fetchWatchHistory();
                           },
-                          icon: const Icon(Icons.play_arrow, color: Colors.black, size: 22),
-                          label: Text("play".tr, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5)),
+                              ],
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.white, Color(0xFFE0E0E0)],
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
+                                const SizedBox(width: 8),
+                                Text("play".tr.toUpperCase(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 15),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-                            interactionCtrl.fetchWatchHistory();
+                        // ℹ️ PREMIUM INFO BUTTON (BANNER)
+                        GestureDetector(
+                          onTap: () async {
+                             await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
+                             interactionCtrl.fetchWatchHistory();
                           },
-                          icon: const Icon(Icons.info_outline, color: Colors.white, size: 20),
-                          label: Text("info".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.25),
-                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white12,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+                                const SizedBox(width: 8),
+                                Text("info".tr.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
+                              ],
+                            ),
                           ),
                         ),
                       ],

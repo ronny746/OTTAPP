@@ -29,6 +29,25 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       DeviceOrientation.landscapeRight,
     ]).catchError((_) {});
     
+    _initPlayer();
+  }
+
+  void _initPlayer() {
+    if (widget.item.videoUrl.isEmpty || !Uri.parse(widget.item.videoUrl).hasAuthority) {
+      print("❌ INVALID VIDEO URL: ${widget.item.videoUrl}");
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Get.snackbar(
+          "Playback Error", 
+          "Video link is invalid or missing.",
+          backgroundColor: Colors.red.withOpacity(0.8),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        _handleBack();
+      });
+      return;
+    }
+
     _player = CachedVideoPlayerPlus.networkUrl(
       Uri.parse(widget.item.videoUrl),
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
@@ -103,8 +122,31 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 
+  Future<void> _seekToRelatively(Duration offset) async {
+    final current = _player.controller.value.position;
+    final target = current + offset;
+    final max = _player.controller.value.duration;
+    
+    // Clamp target
+    final finalPos = target < Duration.zero ? Duration.zero : (target > max ? max : target);
+    await _seekToAbsolute(finalPos);
+  }
+
+  Future<void> _seekToAbsolute(Duration position) async {
+    if (!_player.isInitialized) return;
+    final bool wasPlaying = _player.controller.value.isPlaying;
+    
+    await _player.controller.pause();
+    await _player.controller.seekTo(position);
+    if (wasPlaying) {
+      await _player.controller.play();
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
@@ -112,6 +154,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.black,
+        resizeToAvoidBottomInset: false,
         body: GestureDetector(
           onTap: _toggleControls,
           behavior: HitTestBehavior.opaque,
@@ -190,10 +233,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.replay_10_rounded, color: Colors.white, size: 45),
-                      onPressed: () {
-                        final current = _player.controller.value.position;
-                        _player.controller.seekTo(current - const Duration(seconds: 10));
-                      },
+                      onPressed: () => _seekToRelatively(const Duration(seconds: -10)),
                     ),
                     const SizedBox(width: 50),
                     IconButton(
@@ -211,10 +251,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     const SizedBox(width: 50),
                     IconButton(
                       icon: const Icon(Icons.forward_10_rounded, color: Colors.white, size: 45),
-                      onPressed: () {
-                        final current = _player.controller.value.position;
-                        _player.controller.seekTo(current + const Duration(seconds: 10));
-                      },
+                      onPressed: () => _seekToRelatively(const Duration(seconds: 10)),
                     ),
                   ],
                 ),
@@ -245,7 +282,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   min: 0.0,
                                   max: value.duration.inSeconds.toDouble(),
                                   onChanged: (val) {
-                                    _player.controller.seekTo(Duration(seconds: val.toInt()));
+                                    _seekToAbsolute(Duration(seconds: val.toInt()));
                                   },
                                 ),
                               ),
