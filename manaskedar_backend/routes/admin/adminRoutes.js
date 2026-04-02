@@ -24,7 +24,7 @@ if (!fs.existsSync(uploadDir)) {
 const upload = multer({ 
     storage: multer.diskStorage({
         destination: (req, file, cb) => cb(null, 'uploads/'),
-        filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+        filename: (req, file, cb) => cb(null, Date.now() + '-' + (file.originalname || 'file').replace(/\s+/g, '_'))
     }),
     limits: { fileSize: 50 * 1024 * 1024 * 1024 } // Set high limit (50GB) to effectively remove size restriction
 });

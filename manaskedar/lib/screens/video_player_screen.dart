@@ -85,6 +85,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
     ]).catchError((_) {});
     Navigator.of(context).pop();
   }

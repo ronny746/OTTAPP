@@ -53,6 +53,8 @@
 			<true/>
 			<key>NSAllowsArbitraryLoadsForMedia</key>
 			<true/>
+			<key>NSAllowsArbitraryLoadsInWebContent</key>
+			<true/>
 		</dict>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
