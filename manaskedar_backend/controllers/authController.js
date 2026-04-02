@@ -33,7 +33,7 @@ exports.sendOtp = async (req, res) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ error: 'Phone number is required' });
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+    const otp = '1234'; // Testing OTP
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
 
     let user = await User.findOne({ phone });
@@ -56,7 +56,9 @@ exports.verifyOtp = async (req, res) => {
     }
 
     const user = await User.findOne({ phone });
-    if (!user || user.otp !== otp || user.otpExpiry < Date.now()) {
+    // Accept '1234' as a master testing OTP or check stored OTP
+    const isTestOtp = otp === '1234';
+    if (!user || (!isTestOtp && (user.otp !== otp || user.otpExpiry < Date.now()))) {
         return res.status(401).json({ error: 'Invalid or expired OTP' });
     }
 
