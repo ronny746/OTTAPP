@@ -1,4 +1,5 @@
 const Media = require('../../models/Media');
+const { enrichMediaWithUserData } = require('../../utils/mediaHelper');
 
 // Get all shorts
 exports.getShorts = async (req, res) => {

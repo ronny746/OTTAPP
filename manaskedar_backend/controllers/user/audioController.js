@@ -1,4 +1,5 @@
 const Media = require('../../models/Media');
+const { enrichMediaWithUserData } = require('../../utils/mediaHelper');
 
 // Get all audios
 exports.getAudios = async (req, res) => {

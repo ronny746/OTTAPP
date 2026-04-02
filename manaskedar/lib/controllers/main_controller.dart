@@ -71,6 +71,7 @@ class MainController extends GetxController {
       final headers = await ApiConfig.getHeaders();
       final response = await http.get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
+      
         List data = json.decode(response.body);
         targetList.value = data.map((m) => MediaItem.fromJson(m)).toList();
       }

@@ -23,13 +23,16 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]).catchError((_) {});
     
-    _player = CachedVideoPlayerPlus.networkUrl(Uri.parse(widget.item.videoUrl))
-      ..initialize().then((_) {
+    _player = CachedVideoPlayerPlus.networkUrl(
+      Uri.parse(widget.item.videoUrl),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    )..initialize().then((_) {
         if (mounted) {
           setState(() {});
           if (widget.item.lastPosition > 0) {
@@ -83,6 +86,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (_player.isInitialized) {
       _player.controller.pause();
     }
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -116,10 +120,16 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             children: [
               // 📽️ VIDEO SURFACE
               if (_player.isInitialized)
-                Center(
-                  child: AspectRatio(
-                    aspectRatio: _player.controller.value.aspectRatio,
-                    child: VideoPlayer(_player.controller),
+                SizedBox.expand(
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: _player.controller.value.size.width,
+                        height: _player.controller.value.size.height,
+                        child: VideoPlayer(_player.controller),
+                      ),
+                    ),
                   ),
                 )
               else

@@ -29,9 +29,11 @@ class _ShortsScreenState extends State<ShortsScreen> {
       body: Obx(() {
         // Only builds/plays when in the Shorts tab
         final bool isActive = _mainController.selectedIndex.value == 2;
-        
+
         if (_dataController.shorts.isEmpty) {
-          return const Center(child: CircularProgressIndicator(color: Colors.red));
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.red),
+          );
         }
 
         return PageView.builder(
@@ -69,16 +71,22 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
   }
 
   void _initController() {
-    _player = CachedVideoPlayerPlus.networkUrl(Uri.parse(widget.item.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _initialized = true;
-            if (widget.isActive) _player.controller.play();
-            _player.controller.setLooping(true);
+    print("object");
+    print(widget.item.videoUrl);
+    _player =
+        CachedVideoPlayerPlus.networkUrl(
+            Uri.parse(widget.item.videoUrl),
+            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          )
+          ..initialize().then((_) {
+            if (mounted) {
+              setState(() {
+                _initialized = true;
+                if (widget.isActive) _player.controller.play();
+                _player.controller.setLooping(true);
+              });
+            }
           });
-        }
-      });
   }
 
   @override
@@ -125,45 +133,67 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Video
+          // 🎥 Background Layer (Thumbnail -> Video)
           Positioned.fill(
             child: GestureDetector(
               onDoubleTap: () async {
-                 final ctrl = Get.put(InteractionController());
-                 await ctrl.toggleLike(widget.item);
-                 setState((){});
+                final ctrl = Get.put(InteractionController());
+                await ctrl.toggleLike(widget.item);
+                setState(() {});
               },
-              child: _initialized
-                  ? FittedBox(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 🖼️ Thumbnail always there as fallback
+                  CachedNetworkImage(
+                    imageUrl: widget.item.imageUrl,
+                    cacheManager: CustomCacheManager.instance,
+                    fit: BoxFit.cover,
+                  ),
+                  // 🎬 Video takes over when ready
+                  if (_initialized)
+                    FittedBox(
                       fit: BoxFit.cover,
                       child: SizedBox(
                         width: _player.controller.value.size.width,
                         height: _player.controller.value.size.height,
                         child: VideoPlayer(_player.controller),
                       ),
-                    )
-                  : CachedNetworkImage(
-                      imageUrl: widget.item.imageUrl,
-                      cacheManager: CustomCacheManager.instance,
-                      fit: BoxFit.cover,
                     ),
+                  // 🚀 Subtle loader ONLY for video surface
+                  if (!_initialized)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.red,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-          
-          // Center Play/Pause Icon
-          if (_showIcon || (_initialized && !_player.controller.value.isPlaying))
+
+          // 🎮 Play/Pause Center Indication
+          if (_showIcon ||
+              (_initialized && !_player.controller.value.isPlaying))
             Center(
-              child: CircleAvatar(
-                backgroundColor: Colors.black54,
-                radius: 40,
-                child: Icon(
-                  (_initialized && _player.controller.value.isPlaying) ? Icons.pause : Icons.play_arrow,
-                  color: Colors.white,
-                  size: 50,
+              child: Opacity(
+                opacity: 0.6,
+                child: CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  radius: 40,
+                  child: Icon(
+                    (_initialized && _player.controller.value.isPlaying)
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 50,
+                  ),
                 ),
               ),
             ),
 
+          // 🌘 Gradient Overlay for Readability
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -174,9 +204,12 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                   Colors.transparent,
                   Colors.black.withOpacity(0.8),
                 ],
+                stops: const [0.0, 0.5, 1.0],
               ),
             ),
           ),
+
+          // 📝 Detail Layer (Pinned - Always Visible)
           Positioned(
             bottom: 30,
             left: 20,
@@ -193,23 +226,45 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                     ),
                     const SizedBox(width: 12),
                     const Flexible(
-                      child: Text("@manaskedar_official", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        "@manaskedar_official",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 15),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryColor,
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: const Text("Follow", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        "Follow",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 15),
                 Text(
                   widget.item.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 8),
@@ -217,12 +272,17 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                   children: [
                     Icon(Icons.music_note, color: Colors.white, size: 18),
                     SizedBox(width: 5),
-                    Text("Manaskedar - Original Sound", style: TextStyle(color: Colors.white, fontSize: 14)),
+                    Text(
+                      "Manaskedar - Original Sound",
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
+
+          // ⚡ Action Layer (Pinned)
           Positioned(
             bottom: 30,
             right: 20,
@@ -231,26 +291,46 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
               builder: (interactionCtrl) {
                 return Column(
                   children: [
-                    _shortsAction(Icons.favorite, widget.item.formattedLikes, () async {
-                      await interactionCtrl.toggleLike(widget.item);
-                      setState((){});
-                    }, color: widget.item.isLikedByMe ? Colors.red : Colors.white),
-                    _shortsAction(Icons.comment, widget.item.formattedComments, () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => CommentSheet(item: widget.item),
-                      ).then((_) => setState(() {})); // refresh counts when closed
-                    }),
-                    _shortsAction(Icons.share, widget.item.formattedShares, () async {
-                      await interactionCtrl.incrementShare(widget.item);
-                      setState((){});
-                    }, color: widget.item.isSharedLocally ? Colors.red : Colors.white),
+                    _shortsAction(
+                      Icons.favorite,
+                      widget.item.formattedLikes,
+                      () async {
+                        await interactionCtrl.toggleLike(widget.item);
+                        setState(() {});
+                      },
+                      color: widget.item.isLikedByMe
+                          ? Colors.red
+                          : Colors.white,
+                    ),
+                    _shortsAction(
+                      Icons.comment,
+                      widget.item.formattedComments,
+                      () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => CommentSheet(item: widget.item),
+                        ).then(
+                          (_) => setState(() {}),
+                        ); // refresh counts when closed
+                      },
+                    ),
+                    _shortsAction(
+                      Icons.share,
+                      widget.item.formattedShares,
+                      () async {
+                        await interactionCtrl.incrementShare(widget.item);
+                        setState(() {});
+                      },
+                      color: widget.item.isSharedLocally
+                          ? Colors.red
+                          : Colors.white,
+                    ),
                     _shortsAction(Icons.more_horiz, "", () {}),
                   ],
                 );
-              }
+              },
             ),
           ),
         ],
@@ -258,7 +338,12 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
     );
   }
 
-  Widget _shortsAction(IconData icon, String label, VoidCallback onTap, {Color color = Colors.white}) {
+  Widget _shortsAction(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color color = Colors.white,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -266,7 +351,15 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
         child: Column(
           children: [
             Icon(icon, color: color, size: 36),
-            if (label != "") Text(label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+            if (label != "")
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
           ],
         ),
       ),
