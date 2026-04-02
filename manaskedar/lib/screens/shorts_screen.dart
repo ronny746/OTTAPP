@@ -47,50 +47,50 @@ class _ShortsScreenState extends State<ShortsScreen> {
           )),
 
             // 🔥 CATEGORY BAR (PREMIUM)
-            // Positioned(
-            //   top: 50,
-            //   left: 0,
-            //   right: 0,
-            //   child: SizedBox(
-            //     height: 40,
-            //     child: Obx(() => ListView.builder(
-            //       scrollDirection: Axis.horizontal,
-            //       padding: const EdgeInsets.symmetric(horizontal: 15),
-            //       itemCount: _dataController.categoriesList.length,
-            //       itemBuilder: (context, i) {
-            //         final cat = _dataController.categoriesList[i];
-            //         final bool isSel = _dataController.selectedShortsCategory.value == cat;
-            //         return GestureDetector(
-            //           onTap: () {
-            //             _dataController.selectedShortsCategory.value = cat;
-            //             _dataController.shortsPageController.jumpToPage(0);
-            //             _dataController.currentShortIndex.value = 0;
-            //           },
-            //           child: Container(
-            //             margin: const EdgeInsets.only(right: 10),
-            //             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            //             decoration: BoxDecoration(
-            //               color: isSel ? AppTheme.primaryColor : Colors.black.withOpacity(0.4),
-            //               borderRadius: BorderRadius.circular(20),
-            //               border: Border.all(color: isSel ? Colors.transparent : Colors.white24),
-            //             ),
-            //             child: Center(
-            //               child: Text(
-            //                 cat.toUpperCase(),
-            //                 style: TextStyle(
-            //                   color: isSel ? Colors.white : Colors.white70,
-            //                   fontSize: 11,
-            //                   fontWeight: FontWeight.w900,
-            //                   letterSpacing: 1.0,
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-            //         );
-            //       },
-            //     )),
-            //   ),
-            // ),
+            Positioned(
+              top: 65,
+              left: 0,
+              right: 0,
+              child: SizedBox(
+                height: 40,
+                child: Obx(() => ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  itemCount: _dataController.categoriesList.length,
+                  itemBuilder: (context, i) {
+                    final cat = _dataController.categoriesList[i];
+                    final bool isSel = _dataController.selectedShortsCategory.value == cat;
+                    return GestureDetector(
+                      onTap: () {
+                        _dataController.selectedShortsCategory.value = cat;
+                        _dataController.shortsPageController.jumpToPage(0);
+                        _dataController.currentShortIndex.value = 0;
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSel ? AppTheme.primaryColor : Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: isSel ? Colors.transparent : Colors.white24),
+                        ),
+                        child: Center(
+                          child: Text(
+                            cat.toUpperCase(),
+                            style: TextStyle(
+                              color: isSel ? Colors.white : Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                )),
+              ),
+            ),
           ],
         ),
     );

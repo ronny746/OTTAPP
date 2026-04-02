@@ -25,23 +25,33 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const SALT = "MK_SEC_2024_"; // Secure Salt Prefix
 
 app.use((req, res, next) => {
-    // 1. DECODE INCOMING REQUESTS
-    if ((req.method === 'POST' || req.method === 'PUT') && req.body && req.body._q) {
-        try {
-            const reversed = req.body._q.split('').reverse().join('');
-            const decoded = Buffer.from(reversed, 'base64').toString('utf8');
-            if (decoded.startsWith(SALT)) {
-                req.body = JSON.parse(decoded.substring(SALT.length));
+    // 🛡️ 1. DECODE INCOMING REQUESTS (Shield Engine)
+    if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
+        if (req.body._q) {
+            try {
+                const reversed = req.body._q.split('').reverse().join('');
+                const decoded = Buffer.from(reversed, 'base64').toString('utf8');
+                
+                if (decoded.startsWith(SALT)) {
+                    const payload = decoded.substring(SALT.length);
+                    req.body = JSON.parse(payload);
+                } else {
+                    console.warn("[SECURITY] Salt mismatch on path:", req.path);
+                }
+            } catch (e) {
+                console.error("[SECURITY] Decode Error:", e.message);
             }
-        } catch (e) {
-            console.error("Payload decoding failed:", e.message);
         }
     }
 
-    // 2. ENCODE OUTGOING RESPONSES
+    // 🔒 2. ENCODE OUTGOING RESPONSES (Cloak Engine)
     const originalJson = res.json;
     res.json = function(data) {
+        // Only obfuscate User and Auth APIs to prevent global overhead
         if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
+            // Don't obfuscate if it's already an obfuscated object (re-entrancy check)
+            if (data && data._s) return originalJson.call(this, data);
+
             const saltedJson = SALT + JSON.stringify(data);
             const base64 = Buffer.from(saltedJson).toString('base64');
             const reversed = base64.split('').reverse().join('');
