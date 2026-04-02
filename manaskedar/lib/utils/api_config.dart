@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
-  static const String baseUrl = "http://localhost:5001/api";
+  static const String baseUrl = "http://187.127.143.43:5001/api";
   
   static const String auth = "$baseUrl/auth";
   static const String user = "$baseUrl/user";

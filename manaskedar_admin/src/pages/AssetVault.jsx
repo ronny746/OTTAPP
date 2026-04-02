@@ -11,6 +11,7 @@ import {
 const AssetVault = () => {
     const [assets, setAssets] = useState([]);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
     
@@ -43,7 +44,11 @@ const AssetVault = () => {
 
         try {
             const uploadRes = await api.post('/admin/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
             });
             
             const resData = uploadRes.data;
@@ -63,11 +68,13 @@ const AssetVault = () => {
             });
 
             setUploading(false);
+            setUploadProgress(0);
             fetchAssets();
         } catch (err) {
             console.error('Upload failed:', err);
             alert('Upload failed');
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -163,7 +170,18 @@ const AssetVault = () => {
                         className={`flex items-center justify-center gap-3 w-full h-full min-h-[64px] bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] cursor-pointer transition-all shadow-2xl shadow-[#4f46e5]/30 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                         {uploading ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white" />
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+                                    <span className="animate-pulse">{uploadProgress}% Uploading...</span>
+                                </div>
+                                <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-white transition-all duration-300" 
+                                        style={{ width: `${uploadProgress}%` }}
+                                    />
+                                </div>
+                            </div>
                         ) : (
                             <><Plus size={20} /> Transfuse New Binary</>
                         )}
