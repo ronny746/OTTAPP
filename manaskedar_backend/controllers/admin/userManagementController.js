@@ -29,7 +29,7 @@ exports.updateUser = async (req, res) => {
         const user = await User.findByIdAndUpdate(
             req.params.id, 
             { name, email, phone, city }, 
-            { new: true }
+            { returnDocument: 'after' }
         );
         res.status(200).json(user);
     } catch (err) {

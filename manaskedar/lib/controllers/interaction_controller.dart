@@ -20,7 +20,6 @@ class InteractionController extends GetxController {
         if (data['likes'] != null) {
           item.likesList = (data['likes'] as List).map((e) => e.toString()).toList();
         } else {
-          // Fallback optimistic update
           if (item.isLikedByMe) {
             item.likesList.remove(MediaItem.currentUserId);
           } else {
@@ -40,7 +39,6 @@ class InteractionController extends GetxController {
           "Check out '${item.title}' on Manaskedar OTT!\n\nDownload the app to watch it now!";
       await Share.share(shareText);
 
-      // Only increment on server once per session/user locally
       if (item.isSharedLocally) return;
 
       final headers = await ApiConfig.getHeaders();
@@ -77,7 +75,6 @@ class InteractionController extends GetxController {
             .map((c) => CommentModel.fromJson(c))
             .toList();
 
-        // Build Tree
         List<CommentModel> roots = [];
         Map<String, CommentModel> map = {};
         for (var c in flatComments) {
@@ -109,12 +106,11 @@ class InteractionController extends GetxController {
     try {
       final headers = await ApiConfig.getHeaders();
       final response = await http.post(
-        Uri.parse("${ApiConfig.user}/interactions/comment"),
+        Uri.parse("${ApiConfig.user}/interactions/comment/${item.id}"),
         headers: headers,
         body: ApiConfig.encode({
-          'mediaId': item.id,
           'text': text,
-          'parentId': parentId,
+          'parentCommentId': parentId,
         }),
       );
 
@@ -123,7 +119,6 @@ class InteractionController extends GetxController {
         final newComment = CommentModel.fromJson(data);
 
         if (parentId != null) {
-          // Find parent and attach
           for (var c in comments) {
             if (c.id == parentId) {
               c.replies.add(newComment);
@@ -154,7 +149,6 @@ class InteractionController extends GetxController {
       if (response.statusCode == 200) {
         final data = ApiConfig.decode(response.body);
 
-        // Find comment and update likesCount
         void updateLikes(List<CommentModel> list) {
           for (var c in list) {
             if (c.id == commentId) {
@@ -170,7 +164,7 @@ class InteractionController extends GetxController {
               }
               return;
             }
-            updateLikes(c.replies); // recursive for deep nesting if any
+            updateLikes(c.replies);
           }
         }
 
@@ -182,7 +176,7 @@ class InteractionController extends GetxController {
     }
   }
 
-  // --- NEW: History & Favorites ---
+  // --- History & Favorites ---
   var watchHistory = <MediaItem>[].obs;
   var isHistoryLoading = false.obs;
 
@@ -192,7 +186,7 @@ class InteractionController extends GetxController {
       final headers = await ApiConfig.getHeaders();
       final response = await http.get(Uri.parse(ApiConfig.history), headers: headers);
       if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
+        final List data = ApiConfig.decode(response.body);
         watchHistory.value = data.map((h) {
           final media = MediaItem.fromJson(h['media']);
           media.lastPosition = h['position'] ?? 0;
@@ -212,7 +206,7 @@ class InteractionController extends GetxController {
       await http.post(
         Uri.parse(ApiConfig.history),
         headers: headers,
-        body: json.encode({'mediaId': mediaId, 'position': seconds}),
+        body: ApiConfig.encode({'mediaId': mediaId, 'position': seconds}),
       );
     } catch (e) {
       print("Update Position Error: $e");
@@ -228,7 +222,7 @@ class InteractionController extends GetxController {
       final headers = await ApiConfig.getHeaders();
       final response = await http.get(Uri.parse(ApiConfig.favorites), headers: headers);
       if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
+        final List data = ApiConfig.decode(response.body);
         watchFavorites.value = data.map((m) {
           final media = MediaItem.fromJson(m);
           media.isFavorite = true;
@@ -253,7 +247,6 @@ class InteractionController extends GetxController {
         final data = ApiConfig.decode(response.body);
         item.isFavorite = data['isFavorite'];
         
-        // Update local list if we have it
         if (!item.isFavorite) {
           watchFavorites.removeWhere((m) => m.id == item.id);
         } else if (!watchFavorites.any((m) => m.id == item.id)) {

@@ -39,6 +39,10 @@ class AuthController extends GetxController {
     if (isLoggedIn.value) {
       await fetchProfile();
     }
+    
+    // Add cinematic delay for splash
+    await Future.delayed(const Duration(seconds: 3));
+    
     isReady.value = true;
   }
 

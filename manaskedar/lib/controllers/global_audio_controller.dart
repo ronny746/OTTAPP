@@ -56,6 +56,12 @@ class GlobalAudioController extends GetxController {
      }
   }
 
+  void stopAndDispose() {
+    audioPlayer.stop();
+    isMiniPlayerVisible.value = false;
+    currentItem.value = null;
+  }
+
   void togglePlay() {
     if (audioPlayer.playing) {
       audioPlayer.pause();

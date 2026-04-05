@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:manaskedar/models/media_item.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_video_player_plus/cached_video_player_plus.dart';
@@ -227,7 +228,7 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                   if (!_initialized)
                     const Center(
                       child: CircularProgressIndicator(
-                        color: Colors.red,
+                        color: AppTheme.primaryColor,
                         strokeWidth: 2,
                       ),
                     ),
@@ -304,21 +305,22 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                 const SizedBox(height: 15),
                 Text(
                   widget.item.title,
-                  style: const TextStyle(
+                  style: GoogleFonts.lato(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                   maxLines: 2,
                 ),
-                const SizedBox(height: 8),
-                const Row(
+                const SizedBox(height: 10),
+                Row(
                   children: [
-                    Icon(Icons.music_note, color: Colors.white, size: 18),
-                    SizedBox(width: 5),
+                    const Icon(Icons.music_note_rounded, color: AppTheme.primaryColor, size: 18),
+                    const SizedBox(width: 8),
                     Text(
                       "Manaskedar - Original Sound",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      style: GoogleFonts.lato(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -328,26 +330,32 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
 
           // ⚡ Action Layer (Pinned)
           Positioned(
-            bottom: 30,
-            right: 20,
+            bottom: 40,
+            right: 15,
             child: GetBuilder<InteractionController>(
               init: InteractionController(),
               builder: (interactionCtrl) {
                 return Column(
                   children: [
+                    const CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.white10,
+                      child: Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(height: 25),
                     _shortsAction(
-                      Icons.favorite,
+                      widget.item.isLikedByMe ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
                       widget.item.formattedLikes,
                       () async {
                         await interactionCtrl.toggleLike(widget.item);
                         setState(() {});
                       },
                       color: widget.item.isLikedByMe
-                          ? Colors.red
+                          ? AppTheme.primaryColor
                           : Colors.white,
                     ),
                     _shortsAction(
-                      Icons.comment,
+                      Icons.comment_rounded,
                       widget.item.formattedComments,
                       () {
                         showModalBottomSheet(
@@ -361,12 +369,25 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
                       },
                     ),
                     _shortsAction(
-                      Icons.share,
+                      Icons.share_rounded,
                       widget.item.formattedShares,
                       () async {
                         await interactionCtrl.incrementShare(widget.item);
                         setState(() {});
                       },
+                    ),
+                    const SizedBox(height: 10),
+                    // Spinning Mandala Icon
+                    RotationTransition(
+                      turns: const AlwaysStoppedAnimation(45 / 360),
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5), width: 1),
+                        ),
+                        child: const Icon(Icons.filter_vintage_rounded, color: AppTheme.primaryColor, size: 28),
+                      ),
                     ),
                   ],
                 );
@@ -374,11 +395,10 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
             ),
           ),
           
-          // 📊 ULTRA-THIN PROGRESS LINE
           // 📊 ADVANCED DOTTED PROGRESS (PREMIUM STYLE)
           if (_initialized)
             Positioned(
-              bottom: 4,
+              bottom: 6,
               left: 15,
               right: 15,
               child: ValueListenableBuilder(
@@ -403,14 +423,14 @@ class _ShortVideoItemState extends State<ShortVideoItem> {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 25.0),
+        padding: const EdgeInsets.only(bottom: 20.0),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 5),
+            Icon(icon, color: color, size: 34),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              style: GoogleFonts.lato(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900),
             ),
           ],
         ),
@@ -426,7 +446,7 @@ class DottedProgressPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width <= 0) return;
-    final double dotSpacing = 8.0;
+    const double dotSpacing = 8.0;
     final int dotsCount = (size.width / dotSpacing).floor();
     if (dotsCount <= 0) return;
     final double actualSpacing = size.width / dotsCount;

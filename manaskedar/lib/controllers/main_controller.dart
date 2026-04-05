@@ -7,6 +7,14 @@ import '../utils/api_config.dart';
 import '../utils/cache_manager.dart';
 import 'main_screen_controller.dart';
 
+class HomeSection {
+  final String title;
+  final String subtitle;
+  final List<MediaItem> items;
+
+  HomeSection({required this.title, required this.subtitle, required this.items});
+}
+
 class MainController extends GetxController {
   var isLoading = true.obs;
   var banners = <MediaItem>[].obs;
@@ -14,10 +22,14 @@ class MainController extends GetxController {
   var audiobooks = <MediaItem>[].obs;
   var shorts = <MediaItem>[].obs;
   var shows = <MediaItem>[].obs;
+  var continueWatching = <MediaItem>[].obs;
+  var homeSections = <HomeSection>[].obs;
+
   var categoriesList = <String>["All"].obs;
 
   final PageController shortsPageController = PageController();
   var currentShortIndex = 0.obs;
+  var currentBannerIndex = 0.obs;
   var selectedShortsCategory = "All".obs;
 
   List<MediaItem> get filteredShorts {
@@ -26,7 +38,6 @@ class MainController extends GetxController {
   }
 
   void playShort(MediaItem item) {
-    // We switch to All if playing a specific short to ensure it's found
     selectedShortsCategory.value = "All"; 
     int index = shorts.indexWhere((s) => s.id == item.id);
     if (index != -1) {
@@ -50,17 +61,72 @@ class MainController extends GetxController {
   Future<void> fetchAllData() async {
     try {
       isLoading(true);
-      await Future.wait([
-        fetchBanners(),
-        fetchCategoriesList(),
-        fetchSpecificMedia(ApiConfig.movies, popularVideos),
-        fetchSpecificMedia(ApiConfig.audios, audiobooks),
-        fetchSpecificMedia(ApiConfig.shorts, shorts),
-        fetchSpecificMedia(ApiConfig.shows, shows),
-      ]);
+      await fetchHomeData();
+      await fetchCategoriesList();
       preCacheMedia();
     } finally {
       isLoading(false);
+    }
+  }
+
+  Future<void> fetchHomeData() async {
+    try {
+      final headers = await ApiConfig.getHeaders();
+      final response = await http.get(Uri.parse(ApiConfig.home), headers: headers);
+      if (response.statusCode == 200) {
+        final data = ApiConfig.decode(response.body);
+        
+        // Populate Banners
+        if (data['banners'] != null) {
+          banners.value = (data['banners'] as List).map((b) => MediaItem.fromJson(b['mediaId'])).toList();
+        }
+
+        // Populate Sections with robust parsing
+        if (data['sections'] != null) {
+          List<HomeSection> parsedSections = [];
+          for (var s in (data['sections'] as List)) {
+             try {
+               final String title = s['title'] ?? '';
+               final String subtitle = s['subtitle'] ?? '';
+               final List itemsJson = s['items'] ?? [];
+               final List<MediaItem> items = itemsJson.map((m) => MediaItem.fromJson(m)).toList();
+               
+               if (items.isNotEmpty) {
+                 parsedSections.add(HomeSection(title: title, subtitle: subtitle, items: items));
+               }
+             } catch (e) {
+               print("Error parsing section: $e");
+             }
+          }
+          homeSections.value = parsedSections;
+
+          // Clear previous values to ensure fresh load
+          shorts.clear();
+          shows.clear();
+          audiobooks.clear();
+          popularVideos.clear();
+          continueWatching.clear();
+
+          // Sync categorized lists based on case-insensitive keywords
+          for (var section in homeSections) {
+             final String upperTitle = section.title.toUpperCase();
+             if (upperTitle.contains('SHORT')) {
+               shorts.value = section.items;
+               print("✅ Found ${shorts.length} Shorts");
+             } else if (upperTitle.contains('SHOW')) {
+               shows.value = section.items;
+             } else if (upperTitle.contains('AUDIO') || upperTitle.contains('NADA')) {
+               audiobooks.value = section.items;
+             } else if (upperTitle.contains('MOVIE') || upperTitle.contains('MAHA')) {
+               popularVideos.value = section.items;
+             } else if (upperTitle.contains('WATCHING') || upperTitle.contains('CONTINUE')) {
+               continueWatching.value = section.items;
+             }
+          }
+        }
+      }
+    } catch (e) {
+      print("Error fetching home data: $e");
     }
   }
 
@@ -79,7 +145,6 @@ class MainController extends GetxController {
 
   void preCacheMedia() {
     print("🚀 Pro-Active Video Caching Starting...");
-    // Only cache if URL is valid
     for (var i = 0; i < popularVideos.length && i < 2; i++) {
         final url = popularVideos[i].videoUrl;
         if (url.isNotEmpty && Uri.tryParse(url)?.hasAuthority == true) {
@@ -92,32 +157,6 @@ class MainController extends GetxController {
         if (url.isNotEmpty && Uri.tryParse(url)?.hasAuthority == true) {
             CustomCacheManager.instance.downloadFile(url).catchError((e) => print("Cache Shorts Error: $e"));
         }
-    }
-  }
-
-  Future<void> fetchBanners() async {
-    try {
-      final headers = await ApiConfig.getHeaders();
-      final response = await http.get(Uri.parse(ApiConfig.banners), headers: headers);
-      if (response.statusCode == 200) {
-        List data = ApiConfig.decode(response.body);
-        banners.value = data.map((b) => MediaItem.fromJson(b['mediaId'])).toList();
-      }
-    } catch (e) {
-      print("Error fetching banners: $e");
-    }
-  }
-
-  Future<void> fetchSpecificMedia(String url, RxList<MediaItem> targetList) async {
-    try {
-      final headers = await ApiConfig.getHeaders();
-      final response = await http.get(Uri.parse(url), headers: headers);
-      if (response.statusCode == 200) {
-        List data = ApiConfig.decode(response.body);
-        targetList.value = data.map((m) => MediaItem.fromJson(m)).toList();
-      }
-    } catch (e) {
-      print("Error fetching $url: $e");
     }
   }
 }

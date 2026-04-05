@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:manaskedar/models/media_item.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_video_player_plus/cached_video_player_plus.dart';
@@ -37,9 +38,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       print("❌ INVALID VIDEO URL: ${widget.item.videoUrl}");
       Future.delayed(const Duration(milliseconds: 100), () {
         Get.snackbar(
-          "Playback Error", 
-          "Video link is invalid or missing.",
-          backgroundColor: Colors.red.withOpacity(0.8),
+          "PLAYBACK_ERROR".tr, 
+          "INVALID_VIDEO_URL_MESSAGE".tr,
+          backgroundColor: AppTheme.backgroundColor,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
         );
@@ -97,6 +98,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (_player.isInitialized) {
       _player.controller.dispose();
     }
+    // Forcibly reset to portrait to ensure home screen remains vertical
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]).catchError((_) {});
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -108,9 +114,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
     ]).catchError((_) {});
     Navigator.of(context).pop();
   }
@@ -176,14 +179,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   ),
                 )
               else
-                // 🚀 SINGLE PREMIUM LOADER
-                const Center(
+                // 🚀 SPIRITUAL LOADER
+                Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(color: Colors.red, strokeWidth: 3),
-                      SizedBox(height: 15),
-                      Text("ESTABLISHING SECURE CONNECTION...", style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1.2)),
+                      const CircularProgressIndicator(color: AppTheme.primaryColor, strokeWidth: 2),
+                      const SizedBox(height: 20),
+                      Text("ESTABLISHING_DIVINE_CONNECTION".tr, style: GoogleFonts.cinzel(color: AppTheme.primaryColor.withOpacity(0.5), fontSize: 12, letterSpacing: 1.5)),
                     ],
                   ),
                 ),
@@ -216,13 +219,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       const SizedBox(width: 15),
                       Expanded(
                         child: Text(
-                          widget.item.title,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          widget.item.title.toUpperCase(),
+                          style: GoogleFonts.cinzel(color: AppTheme.primaryColor, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5),
                         ),
                       ),
-                      const Icon(Icons.cast, color: Colors.white, size: 20),
+                      const Icon(Icons.cast_rounded, color: Colors.white, size: 20),
                       const SizedBox(width: 20),
-                      const Icon(Icons.settings_outlined, color: Colors.white, size: 20),
+                      const Icon(Icons.settings_input_component_rounded, color: Colors.white, size: 20),
                     ],
                   ),
                 ),
@@ -235,20 +238,27 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       icon: const Icon(Icons.replay_10_rounded, color: Colors.white, size: 45),
                       onPressed: () => _seekToRelatively(const Duration(seconds: -10)),
                     ),
-                    const SizedBox(width: 50),
-                    IconButton(
-                      icon: Icon(
-                        _player.controller.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 65,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _player.controller.value.isPlaying ? _player.controller.pause() : _player.controller.play();
-                        });
+                    const SizedBox(width: 80),
+                    GestureDetector(
+                      onTap: () {
+                         setState(() {
+                            _player.controller.value.isPlaying ? _player.controller.pause() : _player.controller.play();
+                         });
                       },
+                      child: Container(
+                         padding: const EdgeInsets.all(15),
+                         decoration: BoxDecoration(
+                           shape: BoxShape.circle,
+                           border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+                         ),
+                        child: Icon(
+                          _player.controller.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          color: AppTheme.primaryColor,
+                          size: 60,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 50),
+                    const SizedBox(width: 80),
                     IconButton(
                       icon: const Icon(Icons.forward_10_rounded, color: Colors.white, size: 45),
                       onPressed: () => _seekToRelatively(const Duration(seconds: 10)),
@@ -259,8 +269,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 // 📊 BOTTOM PROGRESS BAR
                 Positioned(
                   bottom: 25,
-                  left: 40,
-                  right: 40,
+                  left: 50,
+                  right: 50,
                   child: Column(
                     children: [
                       ValueListenableBuilder(
@@ -271,11 +281,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                               SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
                                   activeTrackColor: AppTheme.primaryColor,
-                                  inactiveTrackColor: Colors.white30,
+                                  inactiveTrackColor: Colors.white10,
                                   thumbColor: AppTheme.primaryColor,
-                                  overlayColor: AppTheme.primaryColor.withOpacity(0.2),
-                                  trackHeight: 3,
-                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                                  overlayColor: AppTheme.primaryColor.withOpacity(0.1),
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                                 ),
                                 child: Slider(
                                   value: value.position.inSeconds.toDouble().clamp(0.0, value.duration.inSeconds.toDouble() + 0.1),
@@ -293,11 +303,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   children: [
                                     Text(
                                       _formatDuration(value.position),
-                                      style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: GoogleFonts.lato(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                                     ),
                                     Text(
-                                      "-${_formatDuration(value.duration - value.position)}",
-                                      style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                                      _formatDuration(value.duration),
+                                      style: GoogleFonts.lato(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                                     ),
                                   ],
                                 ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/translations.dart';
 import 'controllers/auth_controller.dart';
@@ -39,12 +40,7 @@ class MyApp extends StatelessWidget {
       fallbackLocale: const Locale('en', 'US'),
       home: Obx(() {
         if (!authController.isReady.value) {
-          return const Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
-            ),
-          );
+          return const SplashScreen();
         }
         return authController.isLoggedIn.value ? const MainScreen() : const LoginScreen();
       }),

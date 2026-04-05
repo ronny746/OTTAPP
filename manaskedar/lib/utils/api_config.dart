@@ -3,10 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
   static const String baseUrl = "http://187.127.143.43:5001/api";
+  // static const String baseUrl = "http://192.168.31.44:5001/api";
   
   static const String auth = "$baseUrl/auth";
   static const String user = "$baseUrl/user";
   
+  static const String home = "$user/home";
   static const String banners = "$user/banners";
   static const String categories = "$user/categories";
   

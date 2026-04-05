@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/app_theme.dart';
 import 'otp_screen.dart';
@@ -13,105 +14,93 @@ class LoginScreen extends StatelessWidget {
     final phoneController = TextEditingController();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.backgroundColor,
       body: Stack(
         children: [
-          // 🌌 PREMIUM GRADIENT BACKGROUND
+          // 🌌 SPIRITUAL GRADIENT BACKGROUND
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.black, Color(0xFF1A0101), Colors.black],
-                  stops: [0.0, 0.5, 1.0],
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.5,
+                  colors: [
+                    Color(0xFF2D0D22), // Dark Maroon accent
+                    Color(0xFF1A0A2E), // Deep Royal Purple
+                  ],
                 ),
               ),
             ),
           ),
           
-          // 💨 SLIGHT GLOW TOP LEFT
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.primaryColor.withOpacity(0.05),
-                boxShadow: [
-                  BoxShadow(color: AppTheme.primaryColor.withOpacity(0.1), blurRadius: 100, spreadRadius: 50),
-                ],
-              ),
-            ),
-          ),
-
           SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 35),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                   Center(
                     child: Hero(
                       tag: 'logo',
-                      child: Image.asset('assets/images/logo.png', height: 120, filterQuality: FilterQuality.high),
+                      child: Image.asset(
+                        'assets/images/logo.png', 
+                        height: 100, 
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.flash_on, color: AppTheme.primaryColor, size: 80),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 60),
-                  const Text(
-                    "Enter Your Mobile",
-                    style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
+                  const SizedBox(height: 50),
+                  Text(
+                    "Welcome to",
+                    style: GoogleFonts.lato(color: Colors.white60, fontSize: 16, letterSpacing: 2),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "We will send a high-security OTP for verification",
-                    style: TextStyle(color: Colors.white38, fontSize: 16),
+                  const SizedBox(height: 4),
+                  Text(
+                    "MANASKEDAR\nUNIVERSE",
+                    style: GoogleFonts.cinzel(
+                      color: AppTheme.primaryColor, 
+                      fontSize: 32, 
+                      fontWeight: FontWeight.bold, 
+                      height: 1.1,
+                      letterSpacing: 2
+                    ),
                   ),
                   const SizedBox(height: 50),
                   
-                  // 💎 GLASSMORPHIC INPUT CARD
+                  // 💎 PREMIUM INPUT
                   Container(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [Colors.white.withOpacity(0.1), Colors.transparent],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white12),
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: TextField(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                        decoration: InputDecoration(
-                          hintText: "Phone Number",
-                          hintStyle: const TextStyle(color: Colors.white24, fontWeight: FontWeight.normal),
-                          prefixIcon: const Icon(Icons.phone_iphone_rounded, color: AppTheme.primaryColor, size: 22),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                        ),
+                    child: TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: GoogleFonts.lato(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        hintText: "Enter Mobile Number",
+                        hintStyle: GoogleFonts.lato(color: Colors.white24, fontWeight: FontWeight.normal),
+                        prefixIcon: const Icon(Icons.phone_iphone_rounded, color: AppTheme.primaryColor, size: 20),
+                        border: InputBorder.none,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 35),
                   
-                  // 🔥 PREMIUM GLOWING BUTTON
+                  // 🔥 GOLDEN PILL BUTTON
                   Obx(() {
                     return GestureDetector(
                       onTap: authController.isSendingOtp.value ? null : () {
                         if (phoneController.text.length < 10) {
                           Get.snackbar("Invalid Number", "Please enter 10 digit number", 
-                             snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+                             snackPosition: SnackPosition.BOTTOM, 
+                             backgroundColor: AppTheme.backgroundColor, 
+                             colorText: Colors.white);
                           return;
                         }
                         authController.sendOtp(phoneController.text);
@@ -119,29 +108,29 @@ class LoginScreen extends StatelessWidget {
                       },
                       child: Container(
                         width: double.infinity,
-                        height: 58,
+                        height: 54,
                         decoration: BoxDecoration(
                           color: AppTheme.primaryColor,
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                              color: AppTheme.primaryColor.withOpacity(0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
                             ),
                           ],
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [AppTheme.primaryColor, Color(0xFFB71C1C)],
-                          ),
                         ),
                         child: Center(
                           child: authController.isSendingOtp.value 
-                            ? const CircularProgressIndicator(color: Colors.white) 
-                            : const Text(
+                            ? const CircularProgressIndicator(color: Colors.black) 
+                            : Text(
                                 "RECEIVE SECURE OTP", 
-                                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                                style: GoogleFonts.lato(
+                                  color: Colors.black, 
+                                  fontSize: 14, 
+                                  fontWeight: FontWeight.w900, 
+                                  letterSpacing: 1.5
+                                ),
                               ),
                         ),
                       ),

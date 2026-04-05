@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:manaskedar/utils/app_theme.dart';
 import '../controllers/main_screen_controller.dart';
 import '../controllers/global_audio_controller.dart';
 import '../widgets/mini_player.dart';
@@ -82,16 +84,48 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         bottomNavigationBar: Obx(
-          () => BottomNavigationBar(
-            currentIndex: controller.selectedIndex.value,
-            onTap: controller.onItemTapped,
-            items: [
-              BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home), label: "home".tr),
-              BottomNavigationBarItem(icon: const Icon(Icons.video_collection_outlined), activeIcon: const Icon(Icons.video_collection), label: "videos".tr),
-              BottomNavigationBarItem(icon: const Icon(Icons.flash_on_outlined), activeIcon: const Icon(Icons.flash_on), label: "shorts".tr),
-              BottomNavigationBarItem(icon: const Icon(Icons.headset_outlined), activeIcon: const Icon(Icons.headset), label: "audios".tr),
-              BottomNavigationBarItem(icon: const Icon(Icons.account_circle_outlined), activeIcon: const Icon(Icons.account_circle), label: "account".tr),
-            ],
+          () => Container(
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundColor,
+              border: Border(top: BorderSide(color: AppTheme.primaryColor.withOpacity(0.15), width: 0.5)),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: controller.selectedIndex.value,
+              onTap: controller.onItemTapped,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              selectedItemColor: AppTheme.primaryColor,
+              unselectedItemColor: Colors.white24,
+              selectedLabelStyle: GoogleFonts.lato(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+              unselectedLabelStyle: GoogleFonts.lato(fontSize: 9, letterSpacing: 1, fontWeight: FontWeight.bold),
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.filter_vintage_outlined, size: 22), 
+                  activeIcon: Icon(Icons.filter_vintage, color: AppTheme.primaryColor, size: 26), 
+                  label: "MANDALA".tr
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.visibility_outlined, size: 22), 
+                  activeIcon: Icon(Icons.visibility, color: AppTheme.primaryColor, size: 26), 
+                  label: "DRISHTI".tr
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.bolt_outlined, size: 22), 
+                  activeIcon: Icon(Icons.bolt, color: AppTheme.primaryColor, size: 26), 
+                  label: "ANSH".tr
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.headphones_outlined, size: 22), 
+                  activeIcon: Icon(Icons.headphones, color: AppTheme.primaryColor, size: 26), 
+                  label: "NADA".tr
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.self_improvement_outlined, size: 22), 
+                  activeIcon: Icon(Icons.self_improvement, color: AppTheme.primaryColor, size: 26), 
+                  label: "SADHAKA".tr
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,6 +8,8 @@ import 'dart:io';
 import '../controllers/auth_controller.dart';
 import '../utils/app_theme.dart';
 import '../utils/api_config.dart';
+
+import '../widgets/spiritual_background.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -45,7 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 72);
     
     if (image != null) {
       setState(() {
@@ -69,12 +72,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
            setState(() {
              _uploadedImageUrl = decoded['url'];
            });
-           Get.snackbar("Success", "Profile picture uploaded", backgroundColor: Colors.green, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+           Get.snackbar("SUCCESS".tr, "PROFILE_IMAGE_UPLOADED".tr, backgroundColor: Colors.white, colorText: Colors.black, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(20), borderRadius: 15);
         } else {
-           Get.snackbar("Error", "Failed to upload picture", backgroundColor: Colors.red, colorText: Colors.white);
+           Get.snackbar("ERROR".tr, "IMAGE_UPLOAD_FAILED".tr, backgroundColor: AppTheme.backgroundColor, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(20), borderRadius: 15);
         }
       } catch (e) {
-         Get.snackbar("Error", "Network error while uploading", backgroundColor: Colors.red, colorText: Colors.white);
+         Get.snackbar("ERROR".tr, "NETWORK_ERROR".tr, backgroundColor: AppTheme.backgroundColor, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(20), borderRadius: 15);
       } finally {
         setState(() => _isUploadingImage = false);
       }
@@ -100,85 +103,105 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Edit Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          "EDIT_PROFILE".tr, 
+          style: GoogleFonts.cinzel(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 2.0)
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Center(
-              child: GestureDetector(
-                onTap: _isUploadingImage ? null : _pickImage,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 130,
-                      height: 130,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primaryColor, width: 3),
-                        color: Colors.grey[900],
+      body: SpiritualBackground(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 30),
+              Center(
+                child: GestureDetector(
+                  onTap: _isUploadingImage ? null : _pickImage,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 140,
+                        height: 140,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(color: AppTheme.primaryColor.withOpacity(0.05), blurRadius: 20, spreadRadius: 5),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(70),
+                          child: Container(
+                            color: Colors.white.withOpacity(0.03),
+                            child: _isUploadingImage 
+                              ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+                              : _selectedImage != null
+                                ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                                : (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
+                                  ? Image.network(_uploadedImageUrl!, fit: BoxFit.cover, errorBuilder: (ctx, _, __) => const Icon(Icons.person, size: 70, color: Colors.white24))
+                                  : const Icon(Icons.person_rounded, size: 90, color: Colors.white12),
+                          ),
+                        ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(65),
-                        child: _isUploadingImage 
-                          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-                          : _selectedImage != null
-                            ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                            : (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
-                              ? Image.network(_uploadedImageUrl!, fit: BoxFit.cover, errorBuilder: (ctx, _, __) => const Icon(Icons.person, size: 60, color: Colors.white54))
-                              : const Icon(Icons.person, size: 80, color: Colors.white54),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
-                      ),
-                    )
-                  ],
+                      Positioned(
+                        bottom: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
+                          child: const Icon(Icons.camera_alt_rounded, color: Colors.black, size: 18),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 40),
+              const SizedBox(height: 60),
 
-            _buildTextField("Full Name", Icons.person_outline, _nameController),
-            const SizedBox(height: 25),
-            
-            // Phone is generally read-only in OTP based systems
-            _buildTextField("Mobile Number", Icons.phone_android, _phoneController, readOnly: true, hint: "Cannot edit registered number"),
-            const SizedBox(height: 25),
+              _buildTextField("FULL_NAME".tr, Icons.person_outline_rounded, _nameController),
+              const SizedBox(height: 30),
+              
+              _buildTextField("MOBILE_NUMBER".tr, Icons.phone_iphone_rounded, _phoneController, readOnly: true, hint: "CANNOT_EDIT_MOBILE".tr),
+              const SizedBox(height: 30),
 
-            _buildTextField("City", Icons.location_city_outlined, _cityController),
-            const SizedBox(height: 50),
+              _buildTextField("CITY".tr, Icons.location_on_outlined, _cityController),
+              const SizedBox(height: 70),
 
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              GestureDetector(
+                onTap: _isLoading ? null : _saveProfile,
+                child: Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(color: AppTheme.primaryColor.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                    ],
+                  ),
+                  child: Center(
+                    child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.black)
+                      : Text(
+                          "SAVE_CHANGES".tr, 
+                          style: GoogleFonts.lato(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 2.0)
+                        ),
+                  ),
                 ),
-                child: _isLoading 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("SAVE CHANGES", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
               ),
-            ),
-          ],
+              const SizedBox(height: 50),
+            ],
+          ),
         ),
       ),
     );
@@ -188,26 +211,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 14)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          readOnly: readOnly,
-          onChanged: onChanged,
-          style: TextStyle(color: readOnly ? Colors.white30 : Colors.white, fontSize: 16),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: readOnly ? Colors.white30 : AppTheme.primaryColor),
-            hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white24),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 10),
+          child: Text(label, style: GoogleFonts.lato(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.04),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: readOnly ? Colors.white.withOpacity(0.05) : AppTheme.primaryColor.withOpacity(0.15), width: 1),
+          ),
+          child: TextField(
+            controller: controller,
+            readOnly: readOnly,
+            onChanged: onChanged,
+            style: GoogleFonts.lato(color: readOnly ? Colors.white30 : Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: readOnly ? Colors.white24 : AppTheme.primaryColor, size: 22),
+              hintText: hint,
+              hintStyle: GoogleFonts.lato(color: Colors.white12, fontSize: 14),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             ),
           ),
         ),

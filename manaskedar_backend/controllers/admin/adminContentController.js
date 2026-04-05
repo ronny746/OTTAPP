@@ -65,7 +65,11 @@ exports.updateMedia = async (req, res) => {
 
 exports.getUploadAuth = async (req, res) => {
     try {
-        res.status(200).json({ local: true, endpoint: '/api/admin/upload' });
+        res.status(200).json({ 
+            cloud: 'cloudinary', 
+            endpoint: '/api/admin/upload',
+            message: 'Secure Cloudinary tunnel established'
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -98,6 +102,10 @@ exports.deleteBanner = async (req, res) => {
     }
 };
 
+const cloudinary = require('../../config/cloudinary');
+
+// ... (previous functions same) ...
+
 exports.uploadFile = async (req, res) => {
     try {
         if (!req.file) {
@@ -105,48 +113,51 @@ exports.uploadFile = async (req, res) => {
         }
 
         const isVideo = req.file.mimetype.startsWith('video/');
-        const oldFilePath = req.file.path;
-        
-        if (isVideo) {
-            console.log(`[FFMPEG] Starting FastStart optimization for: ${req.file.filename}`);
-            try {
-                // Optimization for Streaming (FastStart)
-                // We rename original to .tmp, and output optimized to original filename
-                const tmpPath = `${oldFilePath}.tmp`;
-                fs.renameSync(oldFilePath, tmpPath);
+        const isAudio = req.file.mimetype.startsWith('audio/');
+        const localPath = req.file.path;
 
-                // Command to move moov atom to front without re-encoding (-c copy)
-                // Using double quotes for Windows/Mac compatibility with spaces
-                const command = `ffmpeg -i "${tmpPath}" -c copy -movflags +faststart "${oldFilePath}"`;
-                
-                await execPromise(command);
-                
-                // Cleanup tmp file
-                if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
-                console.log(`[FFMPEG] Optimization complete: ${req.file.filename}`);
-            } catch (ffmpegErr) {
-                console.error('[FFMPEG ERROR] Optimization failed, using original file:', ffmpegErr.message);
-                // In case of error, if we renamed it, try to restore it
-                const tmpPathRestoration = `${oldFilePath}.tmp`;
-                if (fs.existsSync(tmpPathRestoration) && !fs.existsSync(oldFilePath)) {
-                    fs.renameSync(tmpPathRestoration, oldFilePath);
-                }
-            }
+        console.log(`[CLOUDINARY] Uploading ${req.file.mimetype} to cloud: ${req.file.filename}`);
+
+        // Cloudinary Upload Configuration
+        const uploadOptions = {
+            folder: 'manaskedar_universe',
+            resource_type: isVideo ? 'video' : (isAudio ? 'video' : 'auto'), // Cloudinary uses 'video' for audio as well
+            use_filename: true,
+            unique_filename: true,
+        };
+
+        // For large videos, use upload_large
+        const uploadResponse = await new Promise((resolve, reject) => {
+            const uploadMethod = isVideo || isAudio ? cloudinary.uploader.upload_large : cloudinary.uploader.upload;
+            uploadMethod(localPath, uploadOptions, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
+        });
+
+        // Cleanup local file after upload
+        if (fs.existsSync(localPath)) {
+            fs.unlinkSync(localPath);
+            console.log(`[CLOUDINARY] Cleaned up local file: ${localPath}`);
         }
 
-        // Generate full URL for the file
-        const protocol = req.protocol;
-        const host = req.get('host');
-        const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
-
         res.status(200).json({
-            message: isVideo ? 'File uploaded and optimized for streaming' : 'File uploaded successfully',
-            url: fileUrl,
-            fileId: req.file.filename,
-            fileType: req.file.mimetype.split('/')[0] 
+            message: 'Media uploaded successfully to Cloudinary',
+            url: uploadResponse.secure_url,
+            fileId: uploadResponse.public_id,
+            fileType: isVideo ? 'video' : (isAudio ? 'audio' : 'image'),
+            duration: uploadResponse.duration || 0,
+            fileSize: uploadResponse.bytes || 0
         });
+
     } catch (err) {
-        console.error('Upload Error:', err.message);
-        res.status(500).json({ error: err.message });
+        console.error('[CLOUDINARY ERROR] Upload failed:', err.message);
+        
+        // Ensure local cleanup even on failure
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        res.status(500).json({ error: `Cloudinary Upload Error: ${err.message}` });
     }
 };

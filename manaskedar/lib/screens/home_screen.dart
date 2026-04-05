@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_theme.dart';
-import '../utils/cache_manager.dart';
 import '../controllers/main_controller.dart';
 import '../controllers/interaction_controller.dart';
 import '../models/media_item.dart';
 import 'details_screen.dart';
 import 'video_player_screen.dart';
 import 'audio_player_screen.dart';
+import '../widgets/spiritual_background.dart';
+import '../widgets/spiritual_shimmer.dart';
+import '../controllers/main_screen_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -19,64 +22,488 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    interactionCtrl.fetchWatchHistory(); // Fetch fresh history on build
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      body: SpiritualBackground(
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                   const SizedBox(height: 50),
+                   _buildTopHeader(),
+                   const SizedBox(height: 40),
+                   // Hero Shimmer
+                   Padding(
+                     padding: const EdgeInsets.symmetric(horizontal: 16),
+                     child: SpiritualShimmer.banner(),
+                   ),
+                   const SizedBox(height: 40),
+                   // Multiple Sections Shimmer
+                   SpiritualShimmer.horizontalList(),
+                   SpiritualShimmer.horizontalList(),
+                   SpiritualShimmer.horizontalList(),
+                ],
+              ),
+            );
+          }
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                const SizedBox(height: 50),
+                
+                // ── BRAND HEADER ──────────────────────────────────────────
+                _buildTopHeader(),
 
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator(color: Colors.white));
-      }
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (controller.banners.isNotEmpty) _buildBannerSlider(context, controller.banners),
-            const SizedBox(height: 20),
-            
-            // --- CONTINUE WATCHING ---
-            Obx(() => interactionCtrl.watchHistory.isNotEmpty 
-              ? _buildHorizontalList(context, "continue_watching".tr, interactionCtrl.watchHistory, isHistory: true)
-              : const SizedBox.shrink()
+                const SizedBox(height: 20),
+
+                // ── HERO SECTION ──────────────────────────────────────────
+                _buildHeroSection(context),
+
+                const SizedBox(height: 28),
+
+                // ── DYNAMIC CONTENT SECTIONS ─────────────────────────────
+                Obx(() => Column(
+                  children: controller.homeSections.map((section) {
+                    return _buildGridSection(
+                      context,
+                      section.title,
+                      section.subtitle,
+                      section.items,
+                    );
+                  }).toList(),
+                )),
+
+                const SizedBox(height: 100),
+              ],
             ),
-
-            if (controller.popularVideos.isNotEmpty) _buildHorizontalList(context, "popular_videos".tr, controller.popularVideos),
-            
-            // Reusing popularVideos for recommended/trending for now till backend is updated
-            if (controller.popularVideos.isNotEmpty) _buildHorizontalList(context, "recommended".tr, controller.popularVideos.reversed.toList()),
-            
-            if (controller.audiobooks.isNotEmpty) _buildHorizontalList(context, "audiobooks".tr, controller.audiobooks),
-            
-            if (controller.popularVideos.isNotEmpty) _buildHorizontalList(context, "trending_now".tr, controller.popularVideos),
-            
-            if (controller.shows.isNotEmpty) _buildHorizontalList(context, "shows".tr, controller.shows),
-            const SizedBox(height: 100),
-          ],
-        ),
-      );
-    });
+          );
+        }),
+      ),
+    );
   }
 
-  Widget _buildBannerSlider(BuildContext context, List<MediaItem> items) {
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 500,
-        viewportFraction: 1,
-        autoPlay: true,
-        autoPlayInterval: const Duration(seconds: 8),
+  // ── BRAND HEADER (LOGO & NAME - COMPACT) ───────────────────────────────────
+  Widget _buildTopHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Elegant Circular Logo
+          Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.04),
+              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.12),
+                  blurRadius: 15,
+                ),
+              ],
+            ),
+            child: Image.asset(
+              "assets/images/logo.png",
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(Icons.flash_on, color: AppTheme.primaryColor, size: 24),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Divine Title
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "MANASKEDAR",
+                style: GoogleFonts.cinzel(
+                  color: AppTheme.primaryColor,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4,
+                ),
+              ),
+              Text(
+                "THE DIVINE UNIVERSE",
+                style: GoogleFonts.cinzel(
+                  color: Colors.white.withOpacity(0.3),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 5,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      items: items.map((item) {
-        return GestureDetector(
-          onTap: () async {
-            await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-            interactionCtrl.fetchWatchHistory();
-          },
+    );
+  }
+
+  // ── HERO SECTION ────────────────────────────────────────────────────────────
+  Widget _buildHeroSection(BuildContext context) {
+    final banners = controller.banners;
+
+    if (banners.length > 1) {
+      return Obx(() {
+        final currentItem = banners[controller.currentBannerIndex.value];
+        return Column(
+          children: [
+            CarouselSlider(
+              items: banners.map((item) {
+                return GestureDetector(
+                  onTap: () => Get.to(() => DetailsScreen(item: item), id: Get.find<MainScreenController>().selectedIndex.value),
+                  child: _buildBannerCard(item),
+                );
+              }).toList(),
+              options: CarouselOptions(
+                aspectRatio: 2.2,
+                autoPlay: true,
+                enlargeCenterPage: true,
+                viewportFraction: 0.92,
+                autoPlayCurve: Curves.easeInOutQuart,
+                autoPlayInterval: const Duration(seconds: 4),
+                onPageChanged: (index, _) =>
+                    controller.currentBannerIndex.value = index,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildDotIndicators(banners.length, controller.currentBannerIndex.value),
+            const SizedBox(height: 20),
+            _buildHeroInfo(context, currentItem),
+          ],
+        );
+      });
+    }
+
+    if (banners.length == 1) {
+      final item = banners.first;
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GestureDetector(
+              onTap: () => Get.to(() => DetailsScreen(item: item), id: Get.find<MainScreenController>().selectedIndex.value),
+              child: _buildBannerCard(item),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildHeroInfo(context, item),
+        ],
+      );
+    }
+
+    return _buildFallbackHero(context);
+  }
+
+  Widget _buildBannerCard(MediaItem item) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: AppTheme.primaryColor.withOpacity(0.12),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.6),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: AspectRatio(
+          aspectRatio: 2.2,
+          child: CachedNetworkImage(
+            imageUrl: item.imageUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            placeholder: (_, __) => Container(color: Colors.white10),
+            errorWidget: (_, __, ___) => Container(color: Colors.white10),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroInfo(BuildContext context, MediaItem item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Text(
+            item.title.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.cinzel(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              height: 1.25,
+              letterSpacing: 2.0,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.category?.toUpperCase() ?? "DIVINE REALM",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.cinzel(
+              color: Colors.white54,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 4,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _pillButton(
+                label: "Play",
+                icon: Icons.play_arrow_rounded,
+                isPrimary: true,
+                onTap: () => Get.to(() => VideoPlayerScreen(item: item)),
+              ),
+              const SizedBox(width: 14),
+              _pillButton(
+                label: "Info",
+                icon: Icons.info_outline_rounded,
+                isPrimary: false,
+                onTap: () => Get.to(() => DetailsScreen(item: item), id: Get.find<MainScreenController>().selectedIndex.value),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackHero(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Column(
+        children: [
+          Text(
+            "THE DIVINE OTT\nAWAKEN YOUR SOUL",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.cinzel(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              height: 1.3,
+              letterSpacing: 2.0,
+            ),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _pillButton(
+                label: "Play",
+                icon: Icons.play_arrow_rounded,
+                isPrimary: true,
+                onTap: () {},
+              ),
+              const SizedBox(width: 14),
+              _pillButton(
+                label: "Info",
+                icon: Icons.info_outline_rounded,
+                isPrimary: false,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDotIndicators(int count, int current) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (i) {
+        final isActive = i == current;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 20 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppTheme.primaryColor
+                : Colors.white.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(3),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _pillButton({
+    required String label,
+    required IconData icon,
+    required bool isPrimary,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 9),
+        decoration: BoxDecoration(
+          color: isPrimary ? Colors.white : Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+          border: isPrimary ? null : Border.all(color: Colors.white30, width: 1.2),
+          boxShadow: isPrimary ? [
+            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+          ] : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isPrimary ? Colors.black : Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.lato(
+                color: isPrimary ? Colors.black : Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridSection(
+    BuildContext context,
+    String title,
+    String subtitle,
+    List<MediaItem> items,
+  ) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Flexible(
+                    child: Text(
+                      title.tr,
+                      style: GoogleFonts.lato(
+                        color: const Color(0xFFF7BD31),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      subtitle.tr,
+                      style: GoogleFonts.lato(
+                        color: Colors.white38,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Container(width: 40, height: 2, color: AppTheme.accentColor),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: AspectRatio(
+                  aspectRatio: 0.72,
+                  child: _buildContentCard(context, item, isContinue: title.contains('watching')),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildContentCard(BuildContext context, MediaItem item, {bool isContinue = false}) {
+    return GestureDetector(
+      onTap: () {
+        // 🎞️ SHORTS: Always jump to Shorts Tab
+        if (item.type == 'short' || item.type == 'shorts') {
+          controller.playShort(item);
+          return;
+        }
+
+        // 🔄 CONTINUE WATCHING: Instant Playback
+        if (isContinue) {
+          if (item.type == 'audio') {
+            Get.to(() => AudioPlayerScreen(item: item));
+          } else {
+            Get.to(() => VideoPlayerScreen(item: item));
+          }
+          return;
+        }
+
+        // 📖 DEFAULT: Detailed Divine Knowledge
+        Get.to(
+          () => DetailsScreen(item: item), 
+          id: Get.find<MainScreenController>().selectedIndex.value,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.15), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryColor.withOpacity(0.05),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
           child: Stack(
             fit: StackFit.expand,
             children: [
               CachedNetworkImage(
                 imageUrl: item.imageUrl,
-                cacheManager: CustomCacheManager.instance,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: Colors.grey[900]),
+                placeholder: (_, __) => Container(color: Colors.white10),
+                errorWidget: (_, __, ___) => Container(color: Colors.white10),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -85,177 +512,34 @@ class HomeScreen extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.2),
-                      Colors.black.withOpacity(0.8),
-                      Colors.black,
+                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.7),
+                      Colors.black.withOpacity(0.9),
                     ],
                   ),
                 ),
               ),
               Positioned(
-                bottom: 50,
-                left: 20,
-                right: 20,
-                child: Column(
-                  children: [
-                    Text(
-                      item.title.toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      "manaskedar_original".tr,
-                      style: const TextStyle(color: Colors.white60, fontSize: 16),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 🔥 PREMIUM PLAY BUTTON (BANNER)
-                        GestureDetector(
-                          onTap: () async {
-                             await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-                             interactionCtrl.fetchWatchHistory();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: [
-                                BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5)),
-                              ],
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Colors.white, Color(0xFFE0E0E0)],
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
-                                const SizedBox(width: 8),
-                                Text("play".tr.toUpperCase(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        // ℹ️ PREMIUM INFO BUTTON (BANNER)
-                        GestureDetector(
-                          onTap: () async {
-                             await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-                             interactionCtrl.fetchWatchHistory();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white12,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
-                                const SizedBox(width: 8),
-                                Text("info".tr.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                bottom: 10,
+                left: 8,
+                right: 8,
+                child: Text(
+                  item.title.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ],
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildHorizontalList(BuildContext context, String title, List<MediaItem> items, {bool isHistory = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
         ),
-        SizedBox(
-          height: isHistory ? 140 : 180, // slightly smaller height for history thumbnails
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemBuilder: (ctx, index) {
-              final item = items[index];
-              return GestureDetector(
-                onTap: () async {
-                  if (item.type == 'short') {
-                     controller.playShort(item);
-                  } else if (isHistory) {
-                    await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => VideoPlayerScreen(item: item)));
-                  } else if (item.type == 'audio') {
-                    await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => AudioPlayerScreen(item: item)));
-                  } else {
-                    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => DetailsScreen(item: item)));
-                  }
-                  // Refresh history when returning from any player or details screen
-                  interactionCtrl.fetchWatchHistory();
-                },
-                child: Container(
-                  width: isHistory ? 160 : 125, // wider thumbnails for history
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(
-                          imageUrl: item.imageUrl,
-                          cacheManager: CustomCacheManager.instance,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(color: Colors.grey[900]),
-                          errorWidget: (context, url, error) => const Icon(Icons.error),
-                        ),
-                      ),
-                      if (isHistory) ...[
-                        const Positioned.fill(
-                          child: Icon(Icons.play_circle_filled, color: Colors.white70, size: 40),
-                        ),
-                        Positioned(
-                          bottom: 0, left: 0, right: 0,
-                          child: Container(
-                            height: 4,
-                            decoration: const BoxDecoration(
-                              color: Colors.white24,
-                              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8)),
-                            ),
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              // Mocking 40% progress if not available, since we don't have total seconds in the model yet, 
-                              // but we'll show progress bar to indicate it's "Continue"
-                              widthFactor: 0.4, 
-                              child: Container(color: AppTheme.primaryColor),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 15),
-      ],
+      ),
     );
   }
 }

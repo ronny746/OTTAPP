@@ -173,7 +173,9 @@ const AssetVault = () => {
                             <div className="flex flex-col items-center gap-2">
                                 <div className="flex items-center gap-3">
                                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
-                                    <span className="animate-pulse">{uploadProgress}% Uploading...</span>
+                                    <span className="animate-pulse">
+                                      {uploadProgress < 100 ? `${uploadProgress}% Uploading...` : 'Transfusing to Cloud...'}
+                                    </span>
                                 </div>
                                 <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
                                     <div 

@@ -7,6 +7,7 @@ const { protect } = require('../../middleware/auth');
 router.use(protect);
 
 // User content
+router.get('/home', userCtrl.getHomeData);
 router.get('/banners', userCtrl.getBanners);
 router.get('/media', userCtrl.getMedia);
 
