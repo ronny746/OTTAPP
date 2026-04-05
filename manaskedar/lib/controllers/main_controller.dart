@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:manaskedar/controllers/auth_controller.dart';
 import '../models/media_item.dart';
 import '../utils/api_config.dart';
 import '../utils/cache_manager.dart';
@@ -73,6 +74,9 @@ class MainController extends GetxController {
     try {
       final headers = await ApiConfig.getHeaders();
       final response = await http.get(Uri.parse(ApiConfig.home), headers: headers);
+      
+      print("Home Data Response Status: ${response.body}");
+      
       if (response.statusCode == 200) {
         final data = ApiConfig.decode(response.body);
         
@@ -112,7 +116,6 @@ class MainController extends GetxController {
              final String upperTitle = section.title.toUpperCase();
              if (upperTitle.contains('SHORT')) {
                shorts.value = section.items;
-               print("✅ Found ${shorts.length} Shorts");
              } else if (upperTitle.contains('SHOW')) {
                shows.value = section.items;
              } else if (upperTitle.contains('AUDIO') || upperTitle.contains('NADA')) {
@@ -124,9 +127,15 @@ class MainController extends GetxController {
              }
           }
         }
+      } else if (response.statusCode == 401) {
+          Get.snackbar("Session Expired", "Please login again to sync with the new server.", 
+            backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+          Get.find<AuthController>().logout();
       }
     } catch (e) {
       print("Error fetching home data: $e");
+      Get.snackbar("Network Error", "Unable to reach the server. Check your Internet or IP config.", 
+        backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
     }
   }
 

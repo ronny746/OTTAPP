@@ -20,6 +20,13 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// 📝 REQUEST LOGGER (For Divine Monitoring)
+app.use((req, res, next) => {
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
+    next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 🛡️ ADVANCED DATA OBFUSCATION (Ultimate Privacy Layer)
