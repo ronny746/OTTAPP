@@ -7,6 +7,7 @@ const adminCtrl = require('../../controllers/admin/adminContentController');
 router.use(protect, admin);
 
 router.get('/media', adminCtrl.getMedia); // Library overview
+router.get('/media/:id', adminCtrl.getMediaById);
 router.post('/media', adminCtrl.createMedia);
 router.put('/media/:id', adminCtrl.updateMedia);
 router.delete('/media/:id', adminCtrl.deleteMedia);
@@ -42,6 +43,7 @@ router.put('/users/:id', userMgmtCtrl.updateUser);
 router.delete('/users/:id', userMgmtCtrl.deleteUser);
 router.patch('/users/:id/role', userMgmtCtrl.toggleAdmin);
 router.patch('/users/:id/premium', userMgmtCtrl.togglePremium);
+router.put('/update-password', userMgmtCtrl.updateAdminPassword);
 
 // Content management shortcuts
 router.post('/banners', adminCtrl.createBanner);

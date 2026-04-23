@@ -70,6 +70,9 @@ class AppTranslations extends Translations {
           'gold_member': 'GOLD MEMBER',
           'support': 'SUPPORT',
           'legal': 'LEGAL',
+          'ESTABLISHING_DIVINE_CONNECTION': 'Establishing Divine Connection...',
+          'PLAYBACK_ERROR': 'Playback Error',
+          'INVALID_VIDEO_URL_MESSAGE': 'The video link is invalid or expired.',
         },
         'hi_IN': {
           'home': 'होम',
@@ -134,6 +137,9 @@ class AppTranslations extends Translations {
           'gold_member': 'गोल्ड मेंबर',
           'support': 'सहायता',
           'legal': 'कानूनी',
+          'ESTABLISHING_DIVINE_CONNECTION': 'दिव्य कनेक्शन स्थापित किया जा रहा है...',
+          'PLAYBACK_ERROR': 'प्लेबैक त्रुटि',
+          'INVALID_VIDEO_URL_MESSAGE': 'वीडियो लिंक अमान्य है या समाप्त हो गया है।',
         },
       };
 }

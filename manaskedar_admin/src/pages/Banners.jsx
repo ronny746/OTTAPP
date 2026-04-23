@@ -1,32 +1,32 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import MediaPicker from '../components/MediaPicker';
 import { 
-    Plus, Trash2, Layout, Sparkles, TrendingUp, 
-    ImageIcon, PlayCircle, ChevronLeft, ChevronRight, 
-    Layers, ExternalLink, Calendar, Search
+    Plus, Trash2, Layout, ImageIcon, Image as Img,
+    ChevronLeft, ChevronRight, Layers, Calendar, 
+    Eye, Sparkles, ArrowUpRight
 } from 'lucide-react';
 
 const Banners = () => {
     const [banners, setBanners] = useState([]);
-    const [media, setMedia] = useState([]);
-    const [selectedMedia, setSelectedMedia] = useState('');
     const [loading, setLoading] = useState(false);
+    const [pickerState, setPickerState] = useState({ isOpen: false, target: '', type: 'all', title: '' });
+    const [newBanner, setNewBanner] = useState({ imageUrl: '', mediaId: null, mediaTitle: '' });
+    const [isAdding, setIsAdding] = useState(false);
     
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const itemsPerPage = 6;
     
     const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', message: '', type: 'danger', onConfirm: () => {} });
 
     const fetchData = async () => {
         try {
             const { data: b } = await api.get('/user/banners');
-            const { data: m } = await api.get('/user/media');
             setBanners(b);
-            setMedia(m);
         } catch (err) {
-            console.error('Data sync failure');
+            console.error('Failed to load banners');
         }
     };
 
@@ -34,21 +34,34 @@ const Banners = () => {
         fetchData();
     }, []);
 
-    const handleAdd = async (e) => {
-        e.preventDefault();
-        const mediaItem = media.find(m => m._id === selectedMedia);
-        if (!mediaItem) return;
+    const openPicker = (target, type, title) => {
+        setPickerState({ isOpen: true, target, type, title });
+    };
 
+    const handlePickerSelect = (asset) => {
+        if (pickerState.target === 'imageUrl') {
+            setNewBanner(prev => ({ ...prev, imageUrl: asset.url }));
+        } else if (pickerState.target === 'mediaId') {
+            setNewBanner(prev => ({ ...prev, mediaId: asset._id, mediaTitle: asset.name }));
+        }
+    };
+
+    const handleSaveBanner = async () => {
+        if (!newBanner.imageUrl || !newBanner.mediaId) {
+            alert('Please select both a banner image and linked content.');
+            return;
+        }
         setLoading(true);
         try {
             await api.post('/admin/banners', { 
-                imageUrl: mediaItem.imageUrl,
-                mediaId: mediaItem._id 
+                imageUrl: newBanner.imageUrl,
+                mediaId: newBanner.mediaId
             });
+            setNewBanner({ imageUrl: '', mediaId: null, mediaTitle: '' });
+            setIsAdding(false);
             fetchData();
-            setSelectedMedia('');
         } catch (err) {
-            alert('Promotion failed');
+            alert('Failed to add banner: ' + (err.response?.data?.error || err.message));
         }
         setLoading(false);
     };
@@ -56,198 +69,283 @@ const Banners = () => {
     const handleDelete = (id) => {
         setConfirmState({
             isOpen: true,
-            title: 'Terminate Promotion',
-            message: 'Are you sure you want to remove this asset from the featured slider? This will not delete the media, only the slider banner.',
+            title: 'Remove Banner',
+            message: 'Are you sure you want to remove this image from the slider? This action cannot be undone.',
             type: 'danger',
-            confirmText: 'Remove Promotion',
+            confirmText: 'Remove',
             onConfirm: async () => {
                 try {
                     await api.delete(`/admin/banners/${id}`);
                     setBanners(banners.filter(b => b._id !== id));
                     setConfirmState(p => ({ ...p, isOpen: false }));
                 } catch (err) {
-                    alert('Elimination protocol failed');
+                    alert('Delete failed');
                     setConfirmState(p => ({ ...p, isOpen: false }));
                 }
             }
         });
     };
 
-    // Pagination Logic
+    // Pagination
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
     const currentBanners = banners.slice(firstIndex, lastIndex);
     const totalPages = Math.ceil(banners.length / itemsPerPage);
 
     return (
-        <div className="space-y-12 pb-24">
-            <div className="frosted-card p-10 border-white/10 ring-1 ring-[#4f46e5]/10">
-                <div className="flex items-center gap-6 mb-12">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#4f46e5]/30 ring-1 ring-white/20">
-                        <TrendingUp size={32} className="text-white" />
+        <div className="max-w-7xl mx-auto space-y-8 pb-24 p-4">
+            {/* HEADER */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm flex flex-col md:flex-row justify-between items-center gap-8">
+                <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                            <Layout size={20} />
+                        </div>
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Slider Manager</span>
                     </div>
-                    <div>
-                        <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-1">Featured Gallery Pipeline</h2>
-                        <p className="text-[rgba(255,255,255,0.4)] font-bold text-sm tracking-wide">Promote high-density assets to the homepage carousel</p>
-                    </div>
+                    <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Banner Slider</h2>
+                    <p className="text-xs text-slate-400 font-medium mt-1">Manage homepage slider banners. Pick images and link them to content.</p>
                 </div>
 
-                <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-6 items-end max-w-4xl">
-                    <div className="flex-1 w-full relative">
-                        <label className="block text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4 ml-1">Asset Source Selection</label>
-                        <div className="relative group">
-                            <select
-                                value={selectedMedia}
-                                onChange={(e) => setSelectedMedia(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl md:px-8 px-4 py-5 text-sm font-black text-white uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-[#4f46e5]/10 focus:border-[#4f46e5]/50 appearance-none transition-all cursor-pointer shadow-lg"
-                                required
-                            >
-                                <option value="" className="bg-[#0f0e17]">-- [ SELECT ASSET TO PROMOTE ] --</option>
-                                {media.filter(m => 
-                                    m.type !== 'short' && 
-                                    m.type !== 'shorts' && 
-                                    !banners.some(b => b.mediaId?._id === m._id)
-                                ).map(m => (
-                                    <option key={m._id} value={m._id} className="bg-[#0f0e17] py-4">
-                                        {m.title.toUpperCase()} • [{m.type.toUpperCase()}]
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
-                                <Layout size={20} />
-                            </div>
-                        </div>
+                <div className="flex items-center gap-6">
+                    <div className="text-center">
+                        <p className="text-2xl font-bold text-slate-800">{banners.length}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Slides</p>
                     </div>
-                    <button type="submit" disabled={loading} className="w-full md:w-auto h-[64px] px-12 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-2xl flex items-center justify-center gap-3 font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-[#4f46e5]/30 transition-all hover:scale-105 active:scale-95 group">
-                        {loading ? (
-                             <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white" />
-                        ) : (
-                            <><Sparkles size={20} className="group-hover:rotate-12 transition-transform" /> Commit Promotion</>
-                        )}
-                    </button>
-                </form>
-            </div>
-
-            {/* VERTICAL BANNER LIST */}
-            <div className="frosted-card overflow-hidden border border-white/5 p-0">
-                <div className="overflow-x-auto text-white">
-                    <table className="w-full text-left">
-                        <thead className="bg-white/[0.02] border-b border-white/5">
-                            <tr>
-                                <th className="px-8 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Promotion Detail</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Asset Class</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Source Metadata</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] text-right">Operations</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {currentBanners.map((banner) => (
-                                <tr key={banner._id} className="hover:bg-white/[0.02] group transition-all">
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-6">
-                                            <div className="w-32 h-16 rounded-xl bg-white/5 overflow-hidden border border-white/10 relative group/img">
-                                                <img src={banner.imageUrl} className="w-full h-full object-cover grayscale opacity-50 group-hover/img:grayscale-0 group-hover/img:opacity-100 transition-all duration-700" alt="" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-black uppercase tracking-wide group-hover:text-[#4f46e5] transition-colors truncate">{banner.mediaId?.title || 'Unknown Asset'}</p>
-                                                <p className="text-[9px] font-bold text-white/20 mt-1 uppercase tracking-widest">{banner._id}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6">
-                                        <span className="text-[10px] font-black uppercase text-white/30 tracking-widest border border-white/5 px-3 py-1 rounded bg-white/5 group-hover:border-[#4f46e5]/20 group-hover:text-[#4f46e5] transition-all">
-                                            {banner.mediaId?.type || 'CORE'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-6">
-                                        <div className="flex flex-col gap-1.5 opacity-60 group-hover:opacity-100">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar size={12} className="text-[#4f46e5]" />
-                                                <span className="text-[10px] font-black uppercase">{banner.mediaId?.year || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Layers size={12} className="text-emerald-500" />
-                                                <span className="text-[10px] font-black uppercase">{banner.mediaId?.rating || '0.0'} RATING</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10b981]">Deployed</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                                            <button 
-                                                onClick={() => handleDelete(banner._id)}
-                                                className="w-10 h-10 bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-lg"
-                                                title="Remove Promotion"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <div className="w-px h-10 bg-slate-100"></div>
+                    {!isAdding ? (
+                        <button 
+                            onClick={() => setIsAdding(true)}
+                            className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition-all"
+                        >
+                            <Plus size={14} /> Add New Banner
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={() => setIsAdding(false)}
+                            className="bg-slate-100 text-slate-500 px-8 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all"
+                        >
+                            Cancel
+                        </button>
+                    )}
                 </div>
-
-                {/* Pagination Panel */}
-                {totalPages > 1 && (
-                    <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
-                        <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">
-                            Registry Page {currentPage} of {totalPages} • Entries {firstIndex + 1}-{Math.min(lastIndex, banners.length)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button 
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-10 hover:bg-[#4f46e5] transition-all"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            
-                            {[...Array(totalPages)].map((_, i) => (
-                                <button 
-                                    key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-10 h-10 rounded-xl text-[10px] font-black uppercase transition-all ${
-                                        currentPage === i + 1 
-                                        ? 'bg-[#4f46e5] text-white shadow-xl shadow-[#4f46e5]/40' 
-                                        : 'text-white/20 hover:bg-white/5 hover:text-white'
-                                    }`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                            
-                            <button 
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-10 hover:bg-[#4f46e5] transition-all"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
-            
-            {banners.length === 0 && (
-                <div className="py-32 flex flex-col items-center justify-center text-center frosted-card border-white/10">
-                    <div className="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl border border-white/10 text-white/10">
-                        <ImageIcon size={48} />
+
+            {/* ADD BANNER FORM */}
+            {isAdding && (
+                <div className="bg-white rounded-2xl border-2 border-indigo-100 p-8 shadow-xl shadow-indigo-600/5 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <h3 className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <Sparkles size={16} className="text-indigo-600" />
+                        Configure New Slide
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* PICK IMAGE */}
+                        <div 
+                            onClick={() => openPicker('imageUrl', 'image', 'Select Banner Image')}
+                            className={`group border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
+                                newBanner.imageUrl ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50'
+                            }`}
+                        >
+                            {newBanner.imageUrl ? (
+                                <img src={newBanner.imageUrl} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Banner" />
+                            ) : (
+                                <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 group-hover:scale-110 transition-all">
+                                    <ImageIcon size={24} />
+                                </div>
+                            )}
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${newBanner.imageUrl ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                {newBanner.imageUrl ? 'Change Image' : 'Pick Banner Image'}
+                            </span>
+                        </div>
+
+                        {/* PICK CONTENT */}
+                        <div 
+                            onClick={() => openPicker('mediaId', 'media', 'Select Content to Link')}
+                            className={`group border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
+                                newBanner.mediaId ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50'
+                            }`}
+                        >
+                            {newBanner.mediaId ? (
+                                <div className="text-center py-4">
+                                    <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                                        <Layers size={24} />
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-800">{newBanner.mediaTitle}</p>
+                                    <p className="text-[9px] text-emerald-500 uppercase font-bold mt-1 tracking-widest">Linked Successfully</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 group-hover:scale-110 transition-all">
+                                        <Layers size={24} />
+                                    </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Link to Content</span>
+                                </>
+                            )}
+                        </div>
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-[0.3em]">Promotion Registry Void</h3>
-                    <p className="text-white/20 font-bold text-[10px] uppercase tracking-[0.2em] max-w-sm mt-3 leading-relaxed">No content currently indexed in featured gallery pulse</p>
+
+                    <div className="mt-8 flex justify-end">
+                        <button 
+                            onClick={handleSaveBanner}
+                            disabled={loading || !newBanner.imageUrl || !newBanner.mediaId}
+                            className="bg-indigo-600 text-white px-10 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition-all disabled:opacity-50"
+                        >
+                            {loading ? 'Adding...' : 'Save Banner Slide'}
+                        </button>
+                    </div>
                 </div>
             )}
 
-            {/* Global Confirm Dialog */}
+            {/* SLIDER PREVIEW */}
+            {banners.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-1">Slider Preview</h3>
+                    <div className="relative rounded-xl overflow-hidden aspect-[21/9] bg-slate-100">
+                        <img 
+                            src={banners[0]?.imageUrl} 
+                            className="w-full h-full object-cover" 
+                            alt="Current Banner" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                        <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                            <div>
+                                <p className="text-white text-lg font-bold">{banners[0]?.mediaId?.title || 'Banner Slide'}</p>
+                                <p className="text-white/60 text-xs">Slide 1 of {banners.length}</p>
+                            </div>
+                            <div className="flex gap-1.5">
+                                {banners.slice(0, 6).map((_, i) => (
+                                    <div key={i} className={`w-8 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/30'}`}></div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* BANNER TABLE */}
+            {banners.length > 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50 border-b border-slate-100">
+                                <tr>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Banner Preview</th>
+                                    <th className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                    <th className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Created</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {currentBanners.map((banner, idx) => (
+                                    <tr key={banner._id} className="hover:bg-slate-50 group transition-all">
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-32 h-16 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 shadow-sm">
+                                                    <img src={banner.imageUrl} className="w-full h-full object-cover" alt="" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                                                        {banner.mediaId?.title || `Slide ${firstIndex + idx + 1}`}
+                                                    </p>
+                                                    <p className="text-[9px] font-bold text-slate-300 mt-0.5 uppercase tracking-widest truncate max-w-[200px]">
+                                                        {banner._id}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Active</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {banner.createdAt ? new Date(banner.createdAt).toLocaleDateString() : '—'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                                                <a 
+                                                    href={banner.imageUrl} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 rounded-xl flex items-center justify-center transition-all shadow-sm"
+                                                >
+                                                    <Eye size={16} />
+                                                </a>
+                                                <button 
+                                                    onClick={() => handleDelete(banner._id)}
+                                                    className="w-9 h-9 bg-rose-50 border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                Showing {firstIndex + 1}-{Math.min(lastIndex, banners.length)} of {banners.length}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`w-9 h-9 rounded-lg text-[10px] font-bold transition-all ${
+                                            currentPage === i + 1 
+                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+                                            : 'text-slate-400 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button 
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="py-20 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 text-slate-200">
+                        <Img size={40} />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">No Banners Yet</h3>
+                    <p className="text-xs text-slate-300 mt-2 max-w-sm">Click "Add Banner" to pick an image from your Asset Vault and add it to the homepage slider.</p>
+                </div>
+            )}
+
+            {/* MEDIA PICKER - for selecting banner image or media content */}
+            <MediaPicker 
+                isOpen={pickerState.isOpen}
+                onClose={() => setPickerState(p => ({ ...p, isOpen: false }))}
+                onSelect={handlePickerSelect}
+                filterType={pickerState.type}
+                title={pickerState.title}
+            />
+
+            {/* Confirm Dialog */}
             <ConfirmDialog 
                 isOpen={confirmState.isOpen}
                 title={confirmState.title}

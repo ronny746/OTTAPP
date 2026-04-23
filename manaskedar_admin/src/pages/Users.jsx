@@ -164,40 +164,40 @@ const Users = () => {
             </div>
 
             {/* VERTICAL USER TABLE */}
-            <div className="frosted-card overflow-hidden border border-white/5 p-0">
-                <div className="overflow-x-auto text-white">
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-white/[0.02] border-b border-white/5">
+                        <thead className="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th className="px-8 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Identity Cluster</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Tier & Role</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Connection Pulse</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Regional Origin</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] text-right">Operations</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">User Details</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Role & Tier</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Activity Pulse</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">City</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Operations</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100">
                             {currentUsers.map(user => (
-                                <tr key={user._id} className="hover:bg-white/[0.02] group transition-all">
+                                <tr key={user._id} className="hover:bg-slate-50 group transition-all">
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-5">
-                                            <div className="w-11 h-11 rounded-xl bg-[#4f46e5]/10 border border-[#4f46e5]/20 flex items-center justify-center text-[#4f46e5] text-xs font-black uppercase shadow-inner">
+                                            <div className="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black uppercase">
                                                 {user.name?.substring(0, 2) || '??'}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-xs font-black uppercase text-white tracking-wide group-hover:text-[#4f46e5] transition-colors">{user.name || 'ANONYMOUS'}</p>
-                                                <p className="text-[9px] font-bold text-white/20 mt-0.5 tracking-widest">{user.phone}</p>
+                                                <p className="text-xs font-black uppercase text-slate-800 tracking-wide group-hover:text-indigo-600 transition-colors">{user.name || 'ANONYMOUS'}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 mt-0.5 tracking-widest">{user.phone}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex flex-col gap-2">
-                                            <div className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border self-start ${user.isAdmin ? 'text-amber-500 border-amber-500/30 bg-amber-500/5' : 'text-white/20 border-white/10'}`}>
+                                            <div className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border self-start ${user.isAdmin ? 'text-amber-600 border-amber-200 bg-amber-50' : 'text-slate-400 border-slate-200'}`}>
                                                 {user.isAdmin ? 'Admin' : 'Member'}
                                             </div>
                                             {user.isPremium && (
-                                                <div className="text-[8px] font-black uppercase px-2 py-0.5 rounded text-cyan-400 border border-cyan-400/30 bg-cyan-400/5 flex items-center gap-1 self-start">
-                                                    <Crown size={8} /> Premium Tier
+                                                <div className="text-[8px] font-black uppercase px-2 py-0.5 rounded text-cyan-600 border border-cyan-200 bg-cyan-50 flex items-center gap-1 self-start">
+                                                    <Crown size={8} /> Premium
                                                 </div>
                                             )}
                                         </div>
@@ -205,15 +205,15 @@ const Users = () => {
                                     <td className="px-6 py-5">
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${user.lastActive ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-white/10'}`}></span>
-                                                <span className="text-[10px] font-black text-white/60 uppercase">{formatLastSeen(user.lastActive)}</span>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${user.lastActive ? 'bg-emerald-500' : 'bg-slate-200'}`}></span>
+                                                <span className="text-[10px] font-black text-slate-600 uppercase">{formatLastSeen(user.lastActive)}</span>
                                             </div>
-                                            <span className="text-[9px] font-bold text-white/10 uppercase tracking-widest ml-3.5">LAST SYNCED</span>
+                                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest ml-3.5">LAST SEEN</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <div className="flex items-center gap-2 text-white/30">
-                                            <MapPin size={12} className="text-[#4f46e5]" />
+                                        <div className="flex items-center gap-2 text-slate-500">
+                                            <MapPin size={12} className="text-indigo-600" />
                                             <span className="text-[10px] font-black uppercase truncate max-w-[120px]">{user.city || 'UNDEFINED'}</span>
                                         </div>
                                     </td>
@@ -221,15 +221,13 @@ const Users = () => {
                                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
                                             <button 
                                                 onClick={() => fetchUserDetails(user._id)}
-                                                className="w-9 h-9 bg-white/5 border border-white/10 text-white/40 hover:bg-[#4f46e5] hover:text-white rounded-xl flex items-center justify-center transition-all"
-                                                title="Full Audit Log"
+                                                className="w-9 h-9 bg-white border border-slate-200 text-slate-400 hover:bg-indigo-600 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm"
                                             >
                                                 <Eye size={16} />
                                             </button>
                                             <button 
                                                 onClick={() => deleteUser(user._id)}
-                                                className="w-9 h-9 bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl flex items-center justify-center transition-all"
-                                                title="Terminate Identity"
+                                                className="w-9 h-9 bg-rose-50 border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -243,9 +241,9 @@ const Users = () => {
 
                 {/* Pagination Panel */}
                 {totalPages > 1 && (
-                    <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
-                        <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">
-                            Global Offset {firstIndex + 1}-{Math.min(lastIndex, filteredUsers.length)} of {filteredUsers.length} entities
+                    <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30">
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            Showing {firstIndex + 1}-{Math.min(lastIndex, filteredUsers.length)} of {filteredUsers.length} users
                         </div>
                         <div className="flex items-center gap-1.5">
                             <button 

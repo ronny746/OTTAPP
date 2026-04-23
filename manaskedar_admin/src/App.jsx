@@ -7,9 +7,13 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import MediaList from './pages/MediaList';
 import AddMedia from './pages/AddMedia';
+import EditMedia from './pages/EditMedia';
 import Banners from './pages/Banners';
 import Users from './pages/Users';
+import Roles from './pages/Roles';
+import Subscriptions from './pages/Subscriptions';
 import AssetVault from './pages/AssetVault';
+import Settings from './pages/Settings';
 
 const PrivateRoute = ({ children }) => {
     const { user, loading } = useAuth();
@@ -27,8 +31,12 @@ function AppRoutes() {
                 <Route path="media" element={<MediaList />} />
                 <Route path="assets" element={<AssetVault />} />
                 <Route path="add-media" element={<AddMedia />} />
+                <Route path="edit-media/:id" element={<EditMedia />} />
                 <Route path="banners" element={<Banners />} />
                 <Route path="users" element={<Users />} />
+                <Route path="roles" element={<Roles />} />
+                <Route path="subs" element={<Subscriptions />} />
+                <Route path="settings" element={<Settings />} />
             </Route>
         </Routes>
     );

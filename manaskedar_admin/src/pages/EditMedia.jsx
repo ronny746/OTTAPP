@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../utils/api';
-import { ArrowLeft, Plus, Image as ImageIcon, X, FileVideo, FileAudio, Film } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Image as ImageIcon, Trash2, Film, X, FileVideo, FileAudio } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import MediaPicker from '../components/MediaPicker';
 
-const AddMedia = () => {
+const EditMedia = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         type: 'video',
@@ -21,11 +23,37 @@ const AddMedia = () => {
         publishingYear: '2024',
     });
 
-    // Picker state
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerTarget, setPickerTarget] = useState(null);
     const [pickerFilterType, setPickerFilterType] = useState('all');
     const [pickerTitle, setPickerTitle] = useState('Select Asset');
+
+    useEffect(() => {
+        const fetchMediaDetails = async () => {
+            try {
+                const { data } = await api.get(`/admin/media/${id}`);
+                setFormData({
+                    title: data.title || '',
+                    type: data.type || 'video',
+                    description: data.description || '',
+                    thumbnail: data.thumbnail || '',
+                    url: data.url || '',
+                    duration: data.duration || '',
+                    category: Array.isArray(data.category) ? data.category.join(', ') : data.category || '',
+                    language: data.language || '',
+                    tags: Array.isArray(data.tags) ? data.tags.join(', ') : data.tags || '',
+                    isPremium: data.isPremium || false,
+                    rating: data.rating || '4.5',
+                    publishingYear: data.publishingYear || '2024',
+                });
+                setLoading(false);
+            } catch (err) {
+                console.error('Failed to fetch media details');
+                setLoading(false);
+            }
+        };
+        fetchMediaDetails();
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -34,10 +62,6 @@ const AddMedia = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.title || !formData.url) {
-            alert('Title and Content URL are required.');
-            return;
-        }
         try {
             const payload = {
                 ...formData,
@@ -45,20 +69,22 @@ const AddMedia = () => {
                 tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
                 duration: formData.duration ? Number(formData.duration) : undefined,
             };
-            await api.post('/admin/media', payload);
+            await api.put(`/admin/media/${id}`, payload);
             navigate('/media');
         } catch (err) {
-            console.error('Failed to create media:', err);
-            alert('Failed to create: ' + (err.response?.data?.error || err.message));
+            console.error('Failed to update media');
+            alert('Update failed: ' + (err.response?.data?.error || err.message));
         }
     };
 
-    const handleReset = () => {
-        setFormData({
-            title: '', type: 'video', description: '', thumbnail: '', url: '',
-            duration: '', category: '', language: '', tags: '', isPremium: false,
-            rating: '4.5', publishingYear: '2024',
-        });
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this content?')) return;
+        try {
+            await api.delete(`/admin/media/${id}`);
+            navigate('/media');
+        } catch (err) {
+            alert('Delete failed');
+        }
     };
 
     const openPicker = (target, filter, title) => {
@@ -74,6 +100,12 @@ const AddMedia = () => {
         }
     };
 
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+        </div>
+    );
+
     const inputClasses = "w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300";
     const labelClasses = "text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block";
 
@@ -85,13 +117,13 @@ const AddMedia = () => {
                         <ArrowLeft size={18} />
                     </button>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-800">Create New Content</h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Fill in the details below</p>
+                        <h2 className="text-xl font-bold text-slate-800">Edit Content</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">ID: {id}</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleReset} className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all">Reset</button>
-                    <button onClick={handleSubmit} className="px-8 py-2.5 rounded-xl bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">Create</button>
+                    <button onClick={() => navigate('/media')} className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                    <button onClick={handleSubmit} className="px-8 py-2.5 rounded-xl bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">Save Changes</button>
                 </div>
             </div>
 
@@ -127,11 +159,11 @@ const AddMedia = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="space-y-1">
                             <label className={labelClasses}>Title *</label>
-                            <input name="title" value={formData.title} onChange={handleChange} placeholder="Enter title" className={inputClasses} required />
+                            <input name="title" value={formData.title} onChange={handleChange} placeholder="Enter title" className={inputClasses} />
                         </div>
                         <div className="space-y-1">
                             <label className={labelClasses}>Category</label>
-                            <input name="category" value={formData.category} onChange={handleChange} placeholder="e.g. Action, Drama, Comedy" className={inputClasses} />
+                            <input name="category" value={formData.category} onChange={handleChange} placeholder="e.g. Action, Drama" className={inputClasses} />
                         </div>
                         
                         <div className="space-y-1 flex items-end">
@@ -176,9 +208,9 @@ const AddMedia = () => {
                     </div>
                 )}
 
-                {/* CONTENT URL - Pick from Assets */}
+                {/* CONTENT URL */}
                 <div>
-                    <h3 className="text-sm font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">Content Source (Video / Audio)</h3>
+                    <h3 className="text-sm font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">Content Source</h3>
                     <div 
                         onClick={() => openPicker('url', formData.type === 'audio' ? 'audio' : 'video', 'Select Content File')}
                         className={`border-2 border-dashed rounded-2xl p-8 flex items-center gap-6 cursor-pointer transition-all ${
@@ -197,21 +229,21 @@ const AddMedia = () => {
                             ) : (
                                 <>
                                     <p className="text-sm font-bold text-slate-600">Click to select from Asset Vault</p>
-                                    <p className="text-[10px] text-slate-400 mt-1">Pick a video or audio file from your uploads</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">Pick a video or audio file</p>
                                 </>
                             )}
                         </div>
                         {formData.url && (
-                            <button onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, url: '' })); }} className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 transition-all shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, url: '' })); }} className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 shrink-0">
                                 <X size={16} />
                             </button>
                         )}
                     </div>
                 </div>
 
-                {/* THUMBNAIL - Pick from Assets */}
+                {/* THUMBNAIL */}
                 <div>
-                    <h3 className="text-sm font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">Thumbnail Image</h3>
+                    <h3 className="text-sm font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">Thumbnail</h3>
                     <div 
                         onClick={() => openPicker('thumbnail', 'image', 'Select Thumbnail')}
                         className={`border-2 border-dashed rounded-2xl p-8 flex items-center gap-6 cursor-pointer transition-all ${
@@ -236,16 +268,26 @@ const AddMedia = () => {
                             ) : (
                                 <>
                                     <p className="text-sm font-bold text-slate-600">Click to select from Asset Vault</p>
-                                    <p className="text-[10px] text-slate-400 mt-1">Choose an image for the content thumbnail</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">Choose an image for the thumbnail</p>
                                 </>
                             )}
                         </div>
                         {formData.thumbnail && (
-                            <button onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, thumbnail: '' })); }} className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 transition-all shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, thumbnail: '' })); }} className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 shrink-0">
                                 <X size={16} />
                             </button>
                         )}
                     </div>
+                </div>
+
+                {/* FOOTER */}
+                <div className="pt-8 border-t border-slate-50 flex items-center justify-end">
+                    <button 
+                        onClick={handleDelete}
+                        className="text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:text-rose-700 transition-colors flex items-center gap-2"
+                    >
+                        <Trash2 size={14} /> Delete This Content
+                    </button>
                 </div>
             </div>
 
@@ -260,4 +302,4 @@ const AddMedia = () => {
     );
 };
 
-export default AddMedia;
+export default EditMedia;

@@ -44,6 +44,16 @@ exports.getMedia = async (req, res) => {
     }
 };
 
+exports.getMediaById = async (req, res) => {
+    try {
+        const media = await Media.findById(req.params.id);
+        if (!media) return res.status(404).json({ error: 'Media not found' });
+        res.status(200).json(media);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // Media CRUD
 exports.createMedia = async (req, res) => {
     try {
@@ -66,9 +76,9 @@ exports.updateMedia = async (req, res) => {
 exports.getUploadAuth = async (req, res) => {
     try {
         res.status(200).json({ 
-            cloud: 'cloudinary', 
+            cloud: 's3', 
             endpoint: '/api/admin/upload',
-            message: 'Secure Cloudinary tunnel established'
+            message: 'AWS S3 tunnel established'
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -102,9 +112,8 @@ exports.deleteBanner = async (req, res) => {
     }
 };
 
-const cloudinary = require('../../config/cloudinary');
-
-// ... (previous functions same) ...
+const { s3Client, bucketName } = require('../../config/s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 
 exports.uploadFile = async (req, res) => {
     try {
@@ -114,50 +123,62 @@ exports.uploadFile = async (req, res) => {
 
         const isVideo = req.file.mimetype.startsWith('video/');
         const isAudio = req.file.mimetype.startsWith('audio/');
+        const isImage = req.file.mimetype.startsWith('image/');
+        
+        let subfolder = 'others';
+        if (isVideo) subfolder = 'videos';
+        else if (isAudio) subfolder = 'audios';
+        else if (isImage) subfolder = 'images';
+
         const localPath = req.file.path;
+        const fileName = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
+        const folder = `manaskedar_universe/${subfolder}`;
+        const key = `${folder}/${fileName}`;
 
-        console.log(`[CLOUDINARY] Uploading ${req.file.mimetype} to cloud: ${req.file.filename}`);
+        console.log(`[S3] Uploading ${req.file.mimetype} to S3: ${key}`);
 
-        // Cloudinary Upload Configuration
-        const uploadOptions = {
-            folder: 'manaskedar_universe',
-            resource_type: isVideo ? 'video' : (isAudio ? 'video' : 'auto'), // Cloudinary uses 'video' for audio as well
-            use_filename: true,
-            unique_filename: true,
-        };
+        const fileStream = fs.createReadStream(localPath);
 
-        // For large videos, use upload_large
-        const uploadResponse = await new Promise((resolve, reject) => {
-            const uploadMethod = isVideo || isAudio ? cloudinary.uploader.upload_large : cloudinary.uploader.upload;
-            uploadMethod(localPath, uploadOptions, (error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            });
+        const upload = new Upload({
+            client: s3Client,
+            params: {
+                Bucket: bucketName,
+                Key: key,
+                Body: fileStream,
+                ContentType: req.file.mimetype,
+                // ACL: 'public-read' // Uncomment if you want the file to be public
+            },
         });
+
+        const uploadResponse = await upload.done();
 
         // Cleanup local file after upload
         if (fs.existsSync(localPath)) {
             fs.unlinkSync(localPath);
-            console.log(`[CLOUDINARY] Cleaned up local file: ${localPath}`);
+            console.log(`[S3] Cleaned up local file: ${localPath}`);
         }
 
+        // Construct the S3 URL (assuming it's public or you have the correct bucket policy)
+        // Format: https://BUCKET_NAME.s3.REGION.amazonaws.com/KEY
+        const s3Url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
         res.status(200).json({
-            message: 'Media uploaded successfully to Cloudinary',
-            url: uploadResponse.secure_url,
-            fileId: uploadResponse.public_id,
+            message: 'Media uploaded successfully to S3',
+            url: s3Url,
+            fileId: key,
             fileType: isVideo ? 'video' : (isAudio ? 'audio' : 'image'),
-            duration: uploadResponse.duration || 0,
-            fileSize: uploadResponse.bytes || 0
+            duration: 0, // S3 doesn't provide duration, might need a library like fluent-ffmpeg to extract it locally before upload
+            fileSize: req.file.size || 0
         });
 
     } catch (err) {
-        console.error('[CLOUDINARY ERROR] Upload failed:', err.message);
+        console.error('[S3 ERROR] Upload failed:', err.message);
         
         // Ensure local cleanup even on failure
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
 
-        res.status(500).json({ error: `Cloudinary Upload Error: ${err.message}` });
+        res.status(500).json({ error: `S3 Upload Error: ${err.message}` });
     }
 };

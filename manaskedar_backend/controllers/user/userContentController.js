@@ -35,13 +35,12 @@ exports.getHomeData = async (req, res) => {
                 return m;
             }) : [];
 
-        // 3. Categories (Requested Order: Continue, Maha Movie, Shows, Shorts, Audio)
-        const movies = await Media.find({ type: { $in: ['movie', 'video'] } }).limit(10).sort('-createdAt');
-        const shows = await Media.find({ type: { $in: ['show', 'video'] } }).limit(10).sort('-createdAt');
-        const shorts = await Media.find({ type: { $in: ['short', 'shorts'] } }).limit(15).sort('-createdAt');
+        // 3. Categories (Requested Order: Continue, Video, Shorts, Audio)
+        const videos = await Media.find({ type: 'video' }).limit(10).sort('-createdAt');
+        const shorts = await Media.find({ type: 'short' }).limit(15).sort('-createdAt');
         const audio = await Media.find({ type: 'audio' }).limit(10).sort('-createdAt');
 
-        // Build structured sections in EXACT requested order with Localization-friendly keys
+        // Build structured sections
         const sections = [
             { 
                title: 'continue_watching', 
@@ -51,12 +50,7 @@ exports.getHomeData = async (req, res) => {
             { 
                 title: 'maha_movies', 
                 subtitle: 'divine_cinema', 
-                items: movies 
-            },
-            { 
-               title: 'sattva_shows', 
-               subtitle: 'divine_series', 
-               items: shows 
+                items: videos 
             },
             { 
                title: 'ansh_shorts', 
@@ -70,22 +64,52 @@ exports.getHomeData = async (req, res) => {
             }
         ];
 
-        // Filter and ensure all items have a string ID
-        const filteredSections = sections
+        // Filter and ensure all items have a string ID and compatible field names
+        const finalSections = sections
             .filter(s => s.items && s.items.length > 0)
             .map(s => ({
                 ...s,
                 items: s.items.map(m => {
                     const item = (typeof m.toObject === 'function') ? m.toObject() : m;
-                    item.id = item._id.toString();
-                    return item;
+                    const mapped = {
+                        id: item._id.toString(),
+                        title: item.title,
+                        imageUrl: item.thumbnail || '',
+                        videoUrl: item.url || '',
+                        type: item.type
+                    };
+
+                    if (item.type === 'video') {
+                        return { ...item, ...mapped };
+                    }
+                    return mapped;
                 })
             }));
 
         res.status(200).json({
-            banners,
-            continueWatching: continueWatchingItems,
-            sections: filteredSections
+            banners: banners.map(b => {
+                const bj = b.toObject();
+                if (bj.mediaId) {
+                    const media = bj.mediaId;
+                    const mediaIdStr = media._id.toString();
+                    
+                    const mapped = {
+                        id: mediaIdStr,
+                        title: media.title,
+                        imageUrl: bj.imageUrl || media.thumbnail || '',
+                        videoUrl: media.url || '',
+                        type: media.type
+                    };
+
+                    // Even for banners, if it's a video, send full data
+                    if (media.type === 'video') {
+                        return { ...bj, mediaId: { ...media, ...mapped } };
+                    }
+                    return { ...bj, mediaId: mapped };
+                }
+                return bj;
+            }),
+            sections: finalSections
         });
     } catch (err) {
         console.error('Home Data Error:', err);
@@ -103,7 +127,22 @@ exports.getMedia = async (req, res) => {
         }
         
         const media = await Media.find(filter);
-        res.status(200).json(media);
+        const mappedMedia = media.map(m => {
+            const item = m.toObject();
+            const mapped = {
+                id: item._id.toString(),
+                title: item.title,
+                imageUrl: item.thumbnail || '',
+                videoUrl: item.url || '',
+                type: item.type
+            };
+
+            if (item.type === 'video') {
+                return { ...item, ...mapped };
+            }
+            return mapped;
+        });
+        res.status(200).json(mappedMedia);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -29,6 +29,8 @@ class MediaItem {
   final String year;
   final String duration;
   final String? category;
+  final bool isPremium;
+  final String? language;
   
   // Episode Data
   final List<Episode> episodes;
@@ -39,7 +41,7 @@ class MediaItem {
   int commentsCount;
   int views;
   List<String> likesList;
-  bool isSharedLocally; // Track locally since backend doesn't store user IDs for shares
+  bool isSharedLocally; 
   int lastPosition; // In seconds
   bool isFavorite;
 
@@ -50,10 +52,12 @@ class MediaItem {
     required this.videoUrl,
     required this.type,
     this.category,
-    this.description = "A mysterious story unfolding in the heart of the city...",
+    this.description = "",
     this.rating = "4.5",
     this.year = "2024",
-    this.duration = "2h 15m",
+    this.duration = "0s",
+    this.isPremium = false,
+    this.language,
     this.likesCount = 0,
     this.sharesCount = 0,
     this.commentsCount = 0,
@@ -67,27 +71,50 @@ class MediaItem {
 
   factory MediaItem.fromJson(Map<String, dynamic> json) {
     List<String> parsedLikes = [];
-    if (json['likes'] != null) {
+    if (json['likes'] != null && json['likes'] is List) {
       for (var l in json['likes']) {
         if (l is String) parsedLikes.add(l);
-        if (l is Map && l['_id'] != null) parsedLikes.add(l['_id'].toString());
+        else if (l is Map && l['_id'] != null) parsedLikes.add(l['_id'].toString());
+      }
+    }
+
+    String categoryStr = "";
+    if (json['category'] != null) {
+      if (json['category'] is List) {
+        categoryStr = (json['category'] as List).join(", ");
+      } else if (json['category'] is String) {
+        categoryStr = json['category'];
+      }
+    }
+
+    String durationStr = "0s";
+    if (json['duration'] != null) {
+      if (json['duration'] is num) {
+        int totalSeconds = (json['duration'] as num).toInt();
+        if (totalSeconds >= 3600) {
+          durationStr = "${totalSeconds ~/ 3600}h ${(totalSeconds % 3600) ~/ 60}m";
+        } else {
+          durationStr = "${totalSeconds ~/ 60}m ${totalSeconds % 60}s";
+        }
+      } else {
+        durationStr = json['duration'].toString();
       }
     }
 
     return MediaItem(
-      id: json['_id'] ?? '',
+      id: json['_id'] ?? json['id'] ?? '',
       title: json['title'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      videoUrl: json['videoUrl'] ?? '',
+      imageUrl: json['imageUrl'] ?? json['thumbnail'] ?? '',
+      videoUrl: json['videoUrl'] ?? json['url'] ?? '',
       type: json['type'] ?? 'video',
-      category: json['category'] != null ? 
-                 (json['category'] is Map ? json['category']['name'] : json['category'].toString()) 
-                 : null,
+      category: categoryStr,
       description: json['description'] ?? '',
-      rating: json['rating'] ?? '4.5',
-      year: json['year'] ?? '2024',
-      duration: json['duration'] ?? '2h 15m',
-      likesCount: parsedLikes.length,
+      rating: json['rating']?.toString() ?? '4.5',
+      year: json['year']?.toString() ?? json['publishingYear']?.toString() ?? '2024',
+      duration: durationStr,
+      isPremium: json['isPremium'] ?? false,
+      language: json['language'],
+      likesCount: json['likesCount'] ?? parsedLikes.length,
       likesList: parsedLikes,
       sharesCount: json['shares'] ?? 0,
       commentsCount: json['commentsCount'] ?? 0,

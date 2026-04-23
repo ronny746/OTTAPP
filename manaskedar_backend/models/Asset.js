@@ -5,7 +5,7 @@ const assetSchema = new mongoose.Schema({
     url: { type: String, required: true },
     type: { type: String, enum: ['video', 'image', 'audio'], required: true },
     fileSize: { type: Number },
-    duration: { type: String }, // For video/audio
+    duration: { type: String },
     createdAt: { type: Date, default: Date.now },
 });
 
