@@ -65,8 +65,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                             animate={{ opacity: 1 }}
                             className="overflow-hidden whitespace-nowrap"
                         >
-                            <h1 className="text-lg font-bold text-white tracking-tight">OTT ADMIN</h1>
-                            <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Control Center</p>
+                            <h1 className="text-lg font-bold text-white tracking-tight uppercase">MANASKEDAR</h1>
+                            <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Admin Universe</p>
                         </motion.div>
                     )}
                 </div>
