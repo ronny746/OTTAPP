@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://103.170.169.222:5001/api',
+    baseURL: 'https://back.manaskedar.com/api',
 });
 
 // Add interceptor to attach token automatically
