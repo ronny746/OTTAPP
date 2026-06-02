@@ -18,7 +18,11 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all for now to solve connection issues, or specify your IP
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 
 // 📝 REQUEST LOGGER (For Divine Monitoring)
@@ -39,7 +43,7 @@ app.use((req, res, next) => {
             try {
                 const reversed = req.body._q.split('').reverse().join('');
                 const decoded = Buffer.from(reversed, 'base64').toString('utf8');
-                
+
                 if (decoded.startsWith(SALT)) {
                     const payload = decoded.substring(SALT.length);
                     req.body = JSON.parse(payload);
@@ -54,9 +58,12 @@ app.use((req, res, next) => {
 
     // 🔒 2. ENCODE OUTGOING RESPONSES (Cloak Engine)
     const originalJson = res.json;
-    res.json = function(data) {
+    res.json = function (data) {
         // Only obfuscate User and Auth APIs to prevent global overhead
-        if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
+        // EXEMPT admin-login and admin-register from obfuscation
+        const isAdminAuth = req.path.includes('admin-login') || req.path.includes('admin-register');
+
+        if (!isAdminAuth && (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth'))) {
             // Don't obfuscate if it's already an obfuscated object (re-entrancy check)
             if (data && data._s) return originalJson.call(this, data);
 
@@ -83,4 +90,4 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {});
+app.listen(PORT, () => { });

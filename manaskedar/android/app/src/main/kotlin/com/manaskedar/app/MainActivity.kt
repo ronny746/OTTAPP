@@ -1,4 +1,4 @@
-package com.manaskedar.manaskedar
+package com.manaskedar.app
 
 import io.flutter.embedding.android.FlutterActivity
 

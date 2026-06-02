@@ -75,8 +75,8 @@ exports.updateMedia = async (req, res) => {
 
 exports.getUploadAuth = async (req, res) => {
     try {
-        res.status(200).json({ 
-            cloud: 's3', 
+        res.status(200).json({
+            cloud: 's3',
             endpoint: '/api/admin/upload',
             message: 'AWS S3 tunnel established'
         });
@@ -124,7 +124,7 @@ exports.uploadFile = async (req, res) => {
         const isVideo = req.file.mimetype.startsWith('video/');
         const isAudio = req.file.mimetype.startsWith('audio/');
         const isImage = req.file.mimetype.startsWith('image/');
-        
+
         let subfolder = 'others';
         if (isVideo) subfolder = 'videos';
         else if (isAudio) subfolder = 'audios';
@@ -173,7 +173,7 @@ exports.uploadFile = async (req, res) => {
 
     } catch (err) {
         console.error('[S3 ERROR] Upload failed:', err.message);
-        
+
         // Ensure local cleanup even on failure
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);

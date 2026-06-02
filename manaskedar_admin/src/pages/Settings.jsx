@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { 
@@ -22,6 +22,46 @@ const Settings = () => {
         newPassword: '',
         confirmPassword: '',
     });
+
+    const [policyData, setPolicyData] = useState({
+        privacyPolicy: '',
+        termsConditions: '',
+    });
+
+    useEffect(() => {
+        if (activeTab === 'app') {
+            fetchSettings();
+        }
+    }, [activeTab]);
+
+    const fetchSettings = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/admin/settings');
+            if (res.data?.success && res.data.data) {
+                setPolicyData({
+                    privacyPolicy: res.data.data.privacyPolicy || '',
+                    termsConditions: res.data.data.termsConditions || '',
+                });
+            }
+        } catch (err) {
+            console.error("Fetch settings error", err);
+        }
+        setLoading(false);
+    };
+
+    const handlePolicyUpdate = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await api.put('/admin/settings', policyData);
+            setSuccess('Configurations updated successfully!');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            alert('Update failed');
+        }
+        setLoading(false);
+    };
 
     const handleAccountUpdate = async (e) => {
         e.preventDefault();
@@ -210,14 +250,14 @@ const Settings = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-bold text-slate-800">OTT Configuration</h3>
-                                        <p className="text-xs text-slate-400">Global settings for your streaming platform.</p>
+                                        <p className="text-xs text-slate-400">Global settings and compliance policies for your platform.</p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
                                         <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
-                                            <Save size={20} />
+                                            <Globe size={20} />
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-slate-800">Platform Name</p>
@@ -235,12 +275,46 @@ const Settings = () => {
                                     </div>
                                 </div>
 
+                                <form onSubmit={handlePolicyUpdate} className="space-y-6 pt-6 border-t border-slate-50">
+                                    <div className="space-y-1">
+                                        <label className={labelClasses}>Privacy Policy</label>
+                                        <textarea 
+                                            rows={6}
+                                            value={policyData.privacyPolicy}
+                                            onChange={(e) => setPolicyData({...policyData, privacyPolicy: e.target.value})}
+                                            className={`${inputClasses} min-h-[150px] font-sans`}
+                                            placeholder="Enter Privacy Policy text or HTML markup here..."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className={labelClasses}>Terms & Conditions</label>
+                                        <textarea 
+                                            rows={6}
+                                            value={policyData.termsConditions}
+                                            onChange={(e) => setPolicyData({...policyData, termsConditions: e.target.value})}
+                                            className={`${inputClasses} min-h-[150px] font-sans`}
+                                            placeholder="Enter Terms & Conditions text or HTML markup here..."
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end pt-4">
+                                        <button 
+                                            type="submit"
+                                            disabled={loading}
+                                            className="bg-indigo-600 text-white px-10 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition-all disabled:opacity-50"
+                                        >
+                                            <Save size={14} /> {loading ? 'Saving Configurations...' : 'Save Configurations'}
+                                        </button>
+                                    </div>
+                                </form>
+
                                 <div className="p-8 bg-indigo-50 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
                                     <div>
                                         <p className="text-sm font-bold text-indigo-900">Need to change API keys?</p>
                                         <p className="text-xs text-indigo-600/70 mt-1">API and Cloud configuration are managed via .env variables for security.</p>
                                     </div>
-                                    <button className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-600/20">Contact Dev</button>
+                                    <button type="button" className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-bold uppercase tracking-widest shadow-lg shadow-indigo-600/20">Contact Dev</button>
                                 </div>
                             </div>
                         )}

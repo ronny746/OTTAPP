@@ -31,6 +31,7 @@ const upload = multer({
 });
 
 const userMgmtCtrl = require('../../controllers/admin/userManagementController');
+const settingCtrl = require('../../controllers/admin/settingController');
 
 router.get('/upload-auth', adminCtrl.getUploadAuth);
 router.post('/upload', upload.single('file'), adminCtrl.uploadFile);
@@ -44,6 +45,10 @@ router.delete('/users/:id', userMgmtCtrl.deleteUser);
 router.patch('/users/:id/role', userMgmtCtrl.toggleAdmin);
 router.patch('/users/:id/premium', userMgmtCtrl.togglePremium);
 router.put('/update-password', userMgmtCtrl.updateAdminPassword);
+
+// Application Settings (Privacy Policy, Terms & Conditions)
+router.get('/settings', settingCtrl.getSettings);
+router.put('/settings', settingCtrl.updateSettings);
 
 // Content management shortcuts
 router.post('/banners', adminCtrl.createBanner);

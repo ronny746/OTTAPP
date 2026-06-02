@@ -1,0 +1,137 @@
+:root {
+  --color-1: #c90076; /* Magenta */
+  --color-2: #020202; /* Deep Black */
+  --color-3: rgba(2, 2, 2, 0.9);
+  --color-4: #00e5ff; /* Cyan */
+  --color-5: #6d28d9; /* Purple */
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --font-sora: 'Outfit', sans-serif; /* We'll stick to Outfit for that tech vibe */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none; /* Custom cursor */
+}
+
+html, body {
+  background-color: var(--color-2);
+  color: var(--text-primary);
+  font-family: var(--font-sora);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, background-color 0.3s ease;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor-border {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease;
+}
+
+/* Scroll Progress Bar */
+.scroll-progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-1), var(--color-4));
+  z-index: 1000;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, var(--color-4), var(--color-1), var(--color-5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 16px 36px;
+  background: linear-gradient(90deg, var(--color-1), var(--color-5));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, var(--color-4), var(--color-1));
+  z-index: -1;
+  transition: left 0.4s ease;
+}
+
+.btn-primary:hover::before {
+  left: 0;
+}
+
+/* Animations */
+.animate-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.animate-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

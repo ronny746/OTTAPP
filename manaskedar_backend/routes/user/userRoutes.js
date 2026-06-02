@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userCtrl = require('../../controllers/user/userContentController');
+const userSettingCtrl = require('../../controllers/user/settingController');
 const { protect } = require('../../middleware/auth');
 
 // Ensure all user routes require an authenticated user
@@ -10,6 +11,7 @@ router.use(protect);
 router.get('/home', userCtrl.getHomeData);
 router.get('/banners', userCtrl.getBanners);
 router.get('/media', userCtrl.getMedia);
+router.get('/settings', userSettingCtrl.getSettings);
 
 // Specific Content Routes
 router.use('/movies', require('./movieRoutes'));
