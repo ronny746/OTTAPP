@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
-  static const String baseUrl = "http://187.127.143.43:5001/api";
+  static const String baseUrl = "https://back.manaskedar.com/api";
   // static const String baseUrl = "http://192.168.31.44:5001/api";
   
 
